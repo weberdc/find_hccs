@@ -73,8 +73,14 @@ if __name__=='__main__':
 
     for u, v, r in to_add:
         if r not in g: g.add_node(r, label=r, _node_type='REASON')
-        if not g.has_edge(u, r): g.add_edge(u, r)
-        if not g.has_edge(v, r): g.add_edge(v, r)
+        if not g.has_edge(u, r):
+            g.add_edge(u, r, weight=1.0)
+        else:
+            g[u][r]['weight'] += 1.0
+        if not g.has_edge(v, r):
+            g.add_edge(v, r, weight=1.0)
+        else:
+            g[v][r]['weight'] += 1.0
 
     nx.write_graphml(g, out_file)
 
