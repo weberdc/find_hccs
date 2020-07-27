@@ -9,6 +9,10 @@ import utils
 
 from argparse import ArgumentParser
 
+#
+# DEPRECATED: See extract_in_conv_to_lcn.py 
+#
+
 class Options:
     def __init__(self):
         self._init_parser()
