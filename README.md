@@ -56,7 +56,7 @@ An alternative approach is to extract HCCs from each LCN before combining the HC
 
 Using one of the specified strategies and appropriate parameters, extract HCCs from the LCN. The strategies available are:
 
-- FSA_V: variant on [FSA](https://link.springer.com/article/10.1007/s13278-016-0319-z) specified in the paper
+- FSA\_V: variant on [FSA](https://link.springer.com/article/10.1007/s13278-016-0319-z) specified in the paper
 - kNN:  k Nearest Neighbour with k = ln(|U|)
 - Threshold: keep only the x heaviest edges
 
@@ -92,8 +92,6 @@ the paper. These include:
 - `nodes_in_common.py`: Provided with two or more graphml files, determines what overlap there is in the graphs' nodes (based on a provided attribute, e.g. "label"), and prints out the result as a table ready for inclusion into a LaTeX paper.
 - `top_hashtags_barchart_vis.py`: Produces a horizontal bar chart of the most used hashtags by the most active HCCs.
 
-## Example run-through
-
 ## Supporting files and scripts
 
 - `create_random_groups.py`: Used to create a random dataset for comparison with the HCCs. Using the remainder of accounts in a corpus, it assigns them randomly to groups matching the size distribution of the HCCs discovered in the corpus (but not including any of the HCC members).
@@ -105,3 +103,7 @@ the paper. These include:
 - `net_log_utils.py`: Utility functions that relate to network matters (separated to avoid dependencies, allowing some scripts to run within a cygwin environment).
 - `sort_csv_by_timestamp.py`: Sorts the rows in an IRA-formatted CSV by a timestamp in the 'timestamp' column.
 - `utils.py`: Utility functions used by the scripts.
+
+The `support` folder holds a number of scripts used for running the pipeline elements with a variety of parameters including window size, theta (for FSA\_V) and threshold parameters.
+
+## Example run-through
