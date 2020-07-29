@@ -73,7 +73,7 @@ def write_header(f, topic):
     elif topic == 'ALL_MENTIONS':
         f.write('timestamp,source,target,interaction,t_id,mentioned_screen_names\n')
     elif topic in ['TIMESTAMP', 'TIMESTAMPS', 'TS']:
-        f.write('timestampt,source,t_id\n')
+        f.write('timestamp,source,t_id\n')
     else:  #if topic in list(set(TOPICS) - set(['RETWEET', 'MENTION', 'REPLY'])):
         f.write('timestamp,source,target,interaction,t_id\n')
 
