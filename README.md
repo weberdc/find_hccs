@@ -91,6 +91,7 @@ the paper. These include:
 - `expand_with_reasons.py`: Fleshes out an HCC by creating new nodes from the _reasons_ recorded for connecting the HCC nodes - i.e., if they retweeted the same tweet, a _reason_ would be the ID of the tweet they both retweeted. By examining this larger graph, it is possible to see which HCCs are related, through which _reason_ nodes connect them.
 - `nodes_in_common.py`: Provided with two or more graphml files, determines what overlap there is in the graphs' nodes (based on a provided attribute, e.g. "label"), and prints out the result as a table ready for inclusion into a LaTeX paper.
 - `top_hashtags_barchart_vis.py`: Produces a horizontal bar chart of the most used hashtags by the most active HCCs.
+- `build_adr_vis.py`: Produces a scatter plot of account diversity ratio values (|accounts|/|tweets|) for each HCC in provided analyses (produced by `interrogate_hccs.py`)
 
 ## Supporting files and scripts
 
