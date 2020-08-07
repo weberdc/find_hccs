@@ -23,7 +23,7 @@ class Options:
         self._init_parser()
 
     def _init_parser(self):
-        usage = 'build_adr_vis.py -i <hcc_analysis>.json'
+        usage = 'build_adr_vis.py [options] <hcc_analysis>.json*'
 
         self.parser = ArgumentParser(usage=usage)
         self.parser.add_argument(
