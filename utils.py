@@ -252,3 +252,15 @@ def sort_by(l, k, reverse=False):
 
 def sort_keys_by_vals(m, reverse=False):
     return sorted(m.keys(), key=lambda k: m[k], reverse=reverse)
+
+
+def safe_max(a, b):
+    if not a: return b
+    if not b: return a
+    return max(a, b)
+
+
+def safe_min(a, b):
+    if not a: return b
+    if not b: return a
+    return min(a, b)

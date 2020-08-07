@@ -28,6 +28,8 @@ Extract interaction data from raw social media posts (e.g., tweets) as CSV rows.
 
 `extract_in_conv_to_lcn.py` is used to link accounts when they join the same _conversation_, by which we mean that they both _reply_ into the same reply tree (rooted at the same original tweet). This script can output either a CSV of the reply interactions (and will need `find_behaviour.py` to infer the links) or an LCN of the inferred links, directly. `extract_in_conv.py` is deprecated, replaced by this script.
 
+**NB** At some point, I intend to experiment shifting from CSV to JSON, so that the column names will be associated with each value in each record. This will increase the intermediate file size (but these could be compressed), but even if they're twice the size, they'll still be much smaller than the original tweets. Ultimately, using a database would be best.
+
 
 ### 2. `find_behaviour.py` and `find_behaviour_via_windows.py`
 
@@ -92,6 +94,7 @@ the paper. These include:
 - `nodes_in_common.py`: Provided with two or more graphml files, determines what overlap there is in the graphs' nodes (based on a provided attribute, e.g. "label"), and prints out the result as a table ready for inclusion into a LaTeX paper.
 - `top_hashtags_barchart_vis.py`: Produces a horizontal bar chart of the most used hashtags by the most active HCCs.
 - `build_adr_vis.py`: Produces a scatter plot of account diversity ratio values (|accounts|/|tweets|) for each HCC in provided analyses (produced by `interrogate_hccs.py`)
+- `build_itd_vis.py`: Produces a scatter plot of inter-arrivel time distributions for all HCCs in an analysis file (JSON). Each column is an HCC's posting timeline.
 
 ## Supporting files and scripts
 
