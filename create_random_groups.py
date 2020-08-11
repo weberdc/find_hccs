@@ -9,14 +9,15 @@ import utils
 
 from argparse import ArgumentParser
 
-# basic stats for a graphml file or all graphml files in a directory
+# Creates randomised groupings matching the sizes of the HCCs provided using
+# accounts and tweets from the given tweets file.
 
 class Options:
     def __init__(self):
         self._init_parser()
 
     def _init_parser(self):
-        usage = 'create_random_groups.py -i <guiding_hcc.graphml> --ids-file <ids.txt>'
+        usage = 'create_random_groups.py -i <guiding_hcc.graphml> --tweets-file <tweets>.json[.gz] [--multiplier <int>]'
 
         self.parser = ArgumentParser(usage=usage)
         self.parser.add_argument(
@@ -30,6 +31,13 @@ class Options:
             default=None,
             dest='tweets_file',
             help='Tweet corpus (JSON, one tweet per line)'
+        )
+        self.parser.add_argument(
+            '-m', '--multiplier',
+            dest='multiplier',
+            type=int,
+            default=1,
+            help='If multiples of the HCCs are required, increase this (default: 1)'
         )
         self.parser.add_argument(
             '-o',
@@ -70,7 +78,8 @@ if __name__=='__main__':
 
     DEBUG=opts.verbose
 
-    g_file = opts.graphml_file
+    g_file    = opts.graphml_file
+    multiples = opts.multiplier
 
     STARTING_TIME = utils.now_str()
     log('Starting at %s\n' % STARTING_TIME)
@@ -93,8 +102,8 @@ if __name__=='__main__':
         t = json.loads(l)
         uid = t['user']['id_str']
         if uid not in post_counts:
-            post_counts[uid] = 0
-        post_counts[uid] += 1
+            post_counts[uid] = 0.0
+        post_counts[uid] += 1.0
         if utils.is_rt(t):
             ot_id = utils.get_ot_from_rt(t)['id_str']
             if ot_id not in retweeted:
@@ -116,36 +125,40 @@ if __name__=='__main__':
 
     out_g = nx.Graph()
 
-    log('Building random groups')
+    log('Building random groups (x%d)' % multiples)
     line_count = 0
-    for sub_g in nx.connected_component_subgraphs(in_g):
-        line_count = utils.log_row_count(line_count, DEBUG)
-        c_id = [id for n, id in sub_g.nodes(data='community_id')][0]
-        size = sub_g.number_of_nodes()
-        fake_ids = random.choices(ids, k=size)
-        for id in fake_ids:
-            try:
-                # Sometimes this fails. I have forced all id values to be strings
-                # in the hope that fixes the issue. Failing that, fail early.
-                ids.remove(id)
-            except e:
-                # quit out early to explore further
-                print('%s is missing from the list of ids' % id)
-                print(json.dumps(ids))
-                sys.exit(1)
+    for iteration in range(multiples):
+        for sub_g in nx.connected_component_subgraphs(in_g):
+            line_count = utils.log_row_count(line_count, DEBUG)
+            c_id = '%s_%03d' % ([id for n, id in sub_g.nodes(data='community_id')][0], iteration)
+            size = sub_g.number_of_nodes()
+            fake_ids = random.choices(ids, k=size)
+            for id in fake_ids:
+                try:
+                    # Sometimes this fails. I have forced all id values to be strings
+                    # in the hope that fixes the issue. Failing that, fail early.
+                    ids.remove(id)
+                except ValueError as e:
+                    # quit out early to explore further
+                    print('%s is missing from the list of ids' % id)
+                    with open('/temp/error.log', 'w', encoding='utf-8') as f:
+                        f.write(json.dumps(ids))
+                        f.write('\n')
+                    print('wrote all known IDs to /temp/error.log')
+                    sys.exit(1)
 
-        # build a clique for them
-        for i in range(size-1):
-            for j in range(i+1, size):
-                id1 = fake_ids[i]
-                id2 = fake_ids[j]
+            # build a clique for them
+            for i in range(size-1):
+                for j in range(i+1, size):
+                    id1 = fake_ids[i]
+                    id2 = fake_ids[j]
 
-                if id1 not in out_g:
-                    out_g.add_node(id1, label=id1, community_id=c_id, post_count=post_counts[id1])
-                if id2 not in out_g:
-                    out_g.add_node(id2, label=id2, community_id=c_id, post_count=post_counts[id2])
-                raw_w = float(count_coretweets(id1, id2, retweeted))
-                out_g.add_edge(id1, id2, normalised_weight=0.0, weight=0.0, raw_weight=raw_w, reason_type='RANDOM')
+                    if id1 not in out_g:
+                        out_g.add_node(id1, label=id1, community_id=c_id, post_count=post_counts[id1])
+                    if id2 not in out_g:
+                        out_g.add_node(id2, label=id2, community_id=c_id, post_count=post_counts[id2])
+                    raw_w = float(count_coretweets(id1, id2, retweeted))
+                    out_g.add_edge(id1, id2, normalised_weight=0.0, weight=0.0, raw_weight=raw_w, reason_type='RANDOM')
     if DEBUG: utils.eprint()
 
     min_w = max_w = None
