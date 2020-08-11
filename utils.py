@@ -75,6 +75,10 @@ def get_uid(t):
     return t['user']['id_str']
 
 
+def get_ot_from_rt(rt):
+    return get_rt(rt)
+
+
 def get_rt(t):
     if 'retweeted_status' in t:
         return t['retweeted_status']
@@ -255,12 +259,12 @@ def sort_keys_by_vals(m, reverse=False):
 
 
 def safe_max(a, b):
-    if not a: return b
-    if not b: return a
+    if a == None: return b
+    if b == None: return a
     return max(a, b)
 
 
 def safe_min(a, b):
-    if not a: return b
-    if not b: return a
+    if a == None: return b
+    if b == None: return a
     return min(a, b)
