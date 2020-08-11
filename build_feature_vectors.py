@@ -115,13 +115,16 @@ def build_f_vecs_for(hcc_info, hcc, accts, corpus_duration_d, f_vecs):
         acct = accts[u_id]
         age_d = s_to_d(max(tweet_tss[u_id]) - s_to_ts(acct['created_at']))
         a_iatss = interarrival_times(tweet_tss[u_id])
-        fol_count = acct['followers_count']
+        foll_count = acct['followers_count']
         fri_count = acct['friends_count']
+        reputation = 0
+        if fri_count + foll_count > 0:
+            reputation = fri_count / float(fri_count + foll_count)
         a_vec = {}
         a_vec['A_age'] = age_d
-        a_vec['A_followers'] = fol_count
+        a_vec['A_followers'] = foll_count
         a_vec['A_friends'] = fri_count
-        a_vec['A_reputation'] = fri_count / float(fri_count + fol_count)
+        a_vec['A_reputation'] = reputation
         a_vec['A_lifetime_tweet_rate'] = acct['statuses_count'] / float(age_d)
         a_vec['A_corpus_tweet_rate'] = user['post_count'] / corpus_duration_d
         a_vec['A_interarrival_time-mean'] = iat_mean(a_iatss)
@@ -140,7 +143,7 @@ def build_f_vecs_for(hcc_info, hcc, accts, corpus_duration_d, f_vecs):
     # g_vec['G_similarity'] = calc_content_similarity(hcc_info['tweets'])
     g_vec['G_density'] = (2.0 * len(E)) / (len(V) * (len(V) - 1))
     g_vec['G_shortest_path-mean'] = nx.average_shortest_path_length(hcc, weight='weight')
-    g_vec['G_clustering_coefficient'] = sum(clustering(hcc, weight='weight').values()) / float(len(V))  #average_clustering(hcc)
+    g_vec['G_clustering_coefficient'] = calc_cluster_coefficient(hcc, V)
     g_vec['G_account_diversity_ratio'] = hcc_info['user_count'] / float(hcc_info['tweet_count'])
     g_vec['G_internal_retweet_ratio'] = get_irr(hcc_info)
     g_vec['G_internal_mention_ratio'] = get_imr(hcc_info)
@@ -152,6 +155,15 @@ def build_f_vecs_for(hcc_info, hcc, accts, corpus_duration_d, f_vecs):
 
     for u_id in a_vecs:
         f_vecs[u_id] = {**a_vecs[u_id], **g_vec}
+
+
+def calc_cluster_coefficient(hcc, V):
+    # check max weight first (random groups may have a max of 0)
+    max_w = max([w for u, v, w in hcc.edges(data='weight')])
+    if max_w == 0:
+        return 0
+    else:
+        return sum(clustering(hcc, weight='weight').values()) / float(len(V))  #average_clustering(hcc)
 
 
 def calc_content_similarity(tweets):
