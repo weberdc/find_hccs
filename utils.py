@@ -76,8 +76,8 @@ def get_uid(t):
 
 
 def get_ot_from_rt(rt):
-    if 'retweeted_status' in t:
-        return t['retweeted_status']
+    if 'retweeted_status' in rt:
+        return rt['retweeted_status']
     else:
         return None
 
