@@ -372,5 +372,5 @@ if __name__=='__main__':
     # clean_text = re.sub(r'[^A-Za-z0-9. @#]', '', full_text)
 
 
-    log('\nHaving started at %s,' % STARTING_TIME)
-    log('now ending at    %s' % utils.now_str())
+    log('Having started at %s,' % STARTING_TIME)
+    log(' now ending at    %s' % utils.now_str())
