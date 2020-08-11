@@ -76,10 +76,6 @@ def get_uid(t):
 
 
 def get_ot_from_rt(rt):
-    return get_rt(rt)
-
-
-def get_rt(t):
     if 'retweeted_status' in t:
         return t['retweeted_status']
     else:
@@ -87,7 +83,7 @@ def get_rt(t):
 
 
 def is_rt(t):
-    return get_rt(t) != None
+    return get_ot_from_rt(t) != None
 
 
 def is_reply(t):
@@ -163,7 +159,7 @@ def lowered_hashtags_from(tweet, include_retweet=False):
         ht_entities = tweet['extended_tweet']['entities']['hashtags']
     hashtags = extract_lower_hts(ht_entities)
     if include_retweet and is_rt(tweet):  # 'retweeted_status' in tweet and tweet['retweeted_status']:
-            hashtags += lowered_hashtags_from(get_rt(tweet)) #['retweeted_status'])
+            hashtags += lowered_hashtags_from(get_ot_from_rt(tweet)) #['retweeted_status'])
     return hashtags
 
 
@@ -174,7 +170,7 @@ def expanded_urls_from(tweet, include_retweet=False):
         url_entities = tweet['extended_tweet']['entities']['urls']
     urls = [u['expanded_url'] for u in url_entities if u['expanded_url']] # skip ''
     if include_retweet and is_rt(tweet):  # 'retweeted_status' in tweet and tweet['retweeted_status']:
-        urls += expanded_urls_from(get_rt(tweet))  #['retweeted_status'])
+        urls += expanded_urls_from(get_ot_from_rt(tweet))  #['retweeted_status'])
     return urls
 
 def mentions_from(tweet, include_retweet=False):
@@ -182,7 +178,7 @@ def mentions_from(tweet, include_retweet=False):
     if 'extended_tweet' in tweet:
         m_entities = tweet['extended_tweet']['entities']['user_mentions']
     if include_retweet and is_rt(tweet):  #'retweeted_status' in tweet and tweet['retweeted_status']:
-        m_entities += mentions_from(get_rt(tweet))  #['retweeted_status'])
+        m_entities += mentions_from(get_ot_from_rt(tweet))  #['retweeted_status'])
     return m_entities
     # return extract_mention_ids(m_entities)
 

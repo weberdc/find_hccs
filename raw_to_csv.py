@@ -117,10 +117,10 @@ def write_rows_from_tweet(csv_f, t, topic):
     t_id = t['id_str']
     source = utils.get_uid(t)
     if topic in ['RETWEET', 'RETWEETS'] and utils.is_rt(t):
-        rt = utils.get_rt(t)
-        target = utils.get_uid(rt)
+        ot = utils.get_ot_from_rt(t)
+        target = utils.get_uid(ot)
         rt_id = t_id
-        ot_id = utils.get_rt(t)['id_str']
+        ot_id = utils.get_ot_from_rt(t)['id_str']
         csv_f.writerow([ts, source, target, 'RETWEET', rt_id, ot_id])
     elif topic in ['REPLY', 'REPLIES']:
         target = t['in_reply_to_user_id_str']

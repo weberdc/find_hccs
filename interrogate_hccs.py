@@ -73,7 +73,7 @@ class Options:
 def process_json_tweet(t, tweets, retweets):
     u_id = t['user']['id_str']
     urls = utils.expanded_urls_from(t)
-    rt = utils.get_rt(t)
+    ot = utils.get_ot_from_rt(t)
     is_reply = utils.is_reply(t)
     t_info = {
         't_id' : t['id_str'],
@@ -86,9 +86,9 @@ def process_json_tweet(t, tweets, retweets):
         'mentioned_ids' : [m['id_str'] for m in utils.mentions_from(t)],
         'urls' : urls,
         'domains' : [utils.extract_domain(u, lower=True) for u in urls],
-        'is_rt' : rt != None,
-        'retweeted_t_id' : rt['id_str'] if rt else None,
-        'retweeted_u_id' : rt['user']['id_str'] if rt else None,
+        'is_rt' : ot != None,
+        'retweeted_t_id' : ot['id_str'] if ot else None,
+        'retweeted_u_id' : ot['user']['id_str'] if ot else None,
         'is_reply' : is_reply,
         'replied_to_t_id' : t['in_reply_to_status_id_str'] if is_reply else None,
         'replied_to_u_id' : t['in_reply_to_user_id_str'] if is_reply else None,
@@ -111,7 +111,7 @@ def process_ira_tweet(t, tweets, retweets):
     except ValueError as e:
         # assume some junk in the 'urls' field, so treat it as one URL
         domains = [utils.extract_domain(t['urls'], lower=True)]
-    rt = t['is_retweet'] == 'true'
+    is_rt = t['is_retweet'] == 'true'
     is_reply = t['in_reply_to_tweetid'] != ''
     t_info = {
         't_id' : t['tweetid'],
@@ -124,9 +124,9 @@ def process_ira_tweet(t, tweets, retweets):
         'mentioned_ids' : utils.parse_ira_mentions(t['user_mentions']),  # [m['id_str'] for m in utils.mentions_from(t)],
         'urls' : urls,
         'domains' : domains,
-        'is_rt' : rt,
-        'retweeted_t_id' : t['retweet_tweetid'] if rt else None,
-        'retweeted_u_id' : t['retweet_userid'] if rt else None,
+        'is_rt' : is_rt,
+        'retweeted_t_id' : t['retweet_tweetid'] if is_rt else None,
+        'retweeted_u_id' : t['retweet_userid'] if is_rt else None,
         'is_reply' : is_reply,
         'replied_to_t_id' : t['in_reply_to_tweetid'] if is_reply else None,
         'replied_to_u_id' : t['in_reply_to_userid'] if is_reply else None,
