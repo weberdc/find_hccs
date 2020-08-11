@@ -49,6 +49,15 @@ class Options:
         return self.parser.parse_args(args)
 
 
+def count_coretweets(id1, id2, retweeted):
+    count = 0
+    for ot in retweeted:
+        rters = retweeted[ot]
+        if id1 in rters and id2 in rters:
+            count += 1
+    return count
+
+
 DEBUG=False
 def log(msg):
     if DEBUG: utils.eprint('[%s] %s' % (utils.now_str(), msg))
@@ -71,8 +80,13 @@ if __name__=='__main__':
 
     t_file = opts.tweets_file
     log('reading tweets %s' % t_file)
-    in_f = gzip.open(t_file, 'rt', encoding='utf-8') if t_file[-1] in 'zZ' else open(t_file, 'r', encoding='utf-8')
+    in_f = (
+        gzip.open(t_file, 'rt', encoding='utf-8')
+        if t_file[-1] in 'zZ'
+        else open(t_file, 'r', encoding='utf-8')
+    )
     post_counts = {}
+    retweeted = {}  # ot_id : [rting_acct_ids]
     line_count = 0
     for l in in_f:
         line_count = utils.log_row_count(line_count, DEBUG)
@@ -81,7 +95,13 @@ if __name__=='__main__':
         if uid not in post_counts:
             post_counts[uid] = 0
         post_counts[uid] += 1
-    utils.eprint()
+        if utils.is_rt(t):
+            ot_id = utils.get_ot_from_rt(t)['id_str']  # oooh, that's not a good name
+            if ot_id not in retweeted:
+                retweeted[ot_id] = [uid]
+            else:
+                retweeted[ot_id].append(uid)
+    if DEBUG: utils.eprint()
 
     ids = set(post_counts.keys())
     log('Found %d accounts' % len(ids))
@@ -95,6 +115,7 @@ if __name__=='__main__':
     out_g = nx.Graph()
 
     log('Building random groups')
+    min_w = max_w = None
     line_count = 0
     for sub_g in nx.connected_component_subgraphs(in_g):
         line_count = utils.log_row_count(line_count, DEBUG)
@@ -114,11 +135,32 @@ if __name__=='__main__':
                     out_g.add_node(id1, label=id1, community_id=c_id, post_count=post_counts[id1])
                 if id2 not in out_g:
                     out_g.add_node(id2, label=id2, community_id=c_id, post_count=post_counts[id2])
-                out_g.add_edge(id1, id2, normalised_weight=1.0, weight=1.0, raw_weight=1.0, reason_type='RANDOM')
+                raw_w = float(count_coretweets(id1, id2, retweeted))
+                out_g.add_edge(id1, id2, normalised_weight=0.0, weight=0.0, raw_weight=raw_w, reason_type='RANDOM')
+    if DEBUG: utils.eprint()
+
+    for u, v, d in out_g.edges(data=True):
+        u_edges_weight = out_g.degree(u, weight='raw_weight')  # sum weights of edges
+        v_edges_weight = out_g.degree(v, weight='raw_weight')
+        uv_edge_weight = out_g[u][v]['raw_weight']
+        # denom will be 1 when u and v only connect to each other
+        denom = u_edges_weight + v_edges_weight - uv_edge_weight
+        jaccard_factor = uv_edge_weight / float(denom) if denom else 0
+        w = out_g[u][v]['raw_weight'] * jaccard_factor
+        out_g[u][v]['weight'] = w
+
+        min_w = utils.safe_min(min_w, w)
+        max_w = utils.safe_max(max_w, w)
+
+    print('w_min: %f' % min_w)
+    print('w_max: %f' % max_w)
+    w_diff = float(max_w - min_w) if max_w != min_w else 1
+    for u, v, d in out_g.edges(data=True):
+        out_g[u][v]['normalised_weight'] = (d['weight'] - min_w) / w_diff
 
     utils.eprint()
     log('Writing to %s' % opts.out_file)
     nx.write_graphml(out_g, opts.out_file)
 
-    log('\nHaving started at %s,' % STARTING_TIME)
+    log('Having started at %s,' % STARTING_TIME)
     log('now ending at     %s' % utils.now_str())
