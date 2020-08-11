@@ -96,17 +96,19 @@ if __name__=='__main__':
             post_counts[uid] = 0
         post_counts[uid] += 1
         if utils.is_rt(t):
-            ot_id = utils.get_ot_from_rt(t)['id_str']  # oooh, that's not a good name
+            ot_id = utils.get_ot_from_rt(t)['id_str']
             if ot_id not in retweeted:
                 retweeted[ot_id] = [uid]
             else:
                 retweeted[ot_id].append(uid)
     if DEBUG: utils.eprint()
+    in_f.close()
 
-    ids = set(post_counts.keys())
+    ids = set(map(str, post_counts.keys()))
     log('Found %d accounts' % len(ids))
 
-    taken_ids = [id for n, id in in_g.nodes(data='label')]
+    # forcing things to be strings, otherwise occasionally I can't remove them
+    taken_ids = [str(id) for n, id in in_g.nodes(data='label')]
     for id in taken_ids:
         ids.remove(id)
     ids = list(ids)
@@ -115,7 +117,6 @@ if __name__=='__main__':
     out_g = nx.Graph()
 
     log('Building random groups')
-    min_w = max_w = None
     line_count = 0
     for sub_g in nx.connected_component_subgraphs(in_g):
         line_count = utils.log_row_count(line_count, DEBUG)
@@ -123,7 +124,15 @@ if __name__=='__main__':
         size = sub_g.number_of_nodes()
         fake_ids = random.choices(ids, k=size)
         for id in fake_ids:
-            ids.remove(id)
+            try:
+                # Sometimes this fails. I have forced all id values to be strings
+                # in the hope that fixes the issue. Failing that, fail early.
+                ids.remove(id)
+            except e:
+                # quit out early to explore further
+                print('%s is missing from the list of ids' % id)
+                print(json.dumps(ids))
+                sys.exit(1)
 
         # build a clique for them
         for i in range(size-1):
@@ -139,6 +148,7 @@ if __name__=='__main__':
                 out_g.add_edge(id1, id2, normalised_weight=0.0, weight=0.0, raw_weight=raw_w, reason_type='RANDOM')
     if DEBUG: utils.eprint()
 
+    min_w = max_w = None
     for u, v, d in out_g.edges(data=True):
         u_edges_weight = out_g.degree(u, weight='raw_weight')  # sum weights of edges
         v_edges_weight = out_g.degree(v, weight='raw_weight')
