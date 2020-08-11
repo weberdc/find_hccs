@@ -10,6 +10,7 @@ import utils
 
 from argparse import ArgumentParser
 from networkx.algorithms.approximation.clustering_coefficient import average_clustering
+from networkx.algorithms.cluster import clustering
 
 # Builds feature vectors for HCC members and their groupings as input to the
 # classifiers for validation
@@ -63,6 +64,13 @@ class Options:
             help='Provided analysis file is for the randomised HCCs (default: False)'
         )
         self.parser.add_argument(
+            '--ira',
+            dest='ira',
+            action='store_true',
+            default=False,
+            help='Tweets are in the IRA format (CSV from Twitter) (default: False)'
+        )
+        self.parser.add_argument(
             '--dry-run',
             dest='dry_run',
             action='store_true',
@@ -107,11 +115,13 @@ def build_f_vecs_for(hcc_info, hcc, accts, corpus_duration_d, f_vecs):
         acct = accts[u_id]
         age_d = s_to_d(max(tweet_tss[u_id]) - s_to_ts(acct['created_at']))
         a_iatss = interarrival_times(tweet_tss[u_id])
+        fol_count = acct['followers_count']
+        fri_count = acct['friends_count']
         a_vec = {}
         a_vec['A_age'] = age_d
-        a_vec['A_followers'] = acct['followers_count']
-        a_vec['A_friends'] = acct['friends_count']
-        a_vec['A_reputation'] = a_vec['A_friends'] / float(a_vec['A_friends']+a_vec['A_followers'])
+        a_vec['A_followers'] = fol_count
+        a_vec['A_friends'] = fri_count
+        a_vec['A_reputation'] = fri_count / float(fri_count + fol_count)
         a_vec['A_lifetime_tweet_rate'] = acct['statuses_count'] / float(age_d)
         a_vec['A_corpus_tweet_rate'] = user['post_count'] / corpus_duration_d
         a_vec['A_interarrival_time-mean'] = iat_mean(a_iatss)
@@ -130,11 +140,37 @@ def build_f_vecs_for(hcc_info, hcc, accts, corpus_duration_d, f_vecs):
     g_vec['G_similarity'] = 0
     g_vec['G_density'] = (2.0 * len(E)) / (len(V) * (len(V) - 1))
     g_vec['G_shortest_path-mean'] = nx.average_shortest_path_length(hcc, weight='weight')
-    g_vec['G_clustering_coefficient'] = average_clustering(hcc)
+    g_vec['G_clustering_coefficient'] = sum(clustering(hcc, weight='weight').values()) / float(len(V))  #average_clustering(hcc)
     g_vec['G_account_diversity_ratio'] = hcc_info['user_count'] / float(hcc_info['tweet_count'])
+    g_vec['G_internal_retweet_ratio'] = get_irr(hcc_info)
+    g_vec['G_internal_mention_ratio'] = get_imr(hcc_info)
+    g_vec['G_hashtag_ratio'] = sum(hcc_info['hashtags_used'].values()) / hcc_info['tweet_count']
+    g_vec['G_mention_ratio'] = sum(hcc_info['mentions_used'].values()) / hcc_info['tweet_count']
+    g_vec['G_retweet_ratio'] = hcc_info['rt_t_count'] / hcc_info['tweet_count']
+    g_vec['G_hashtag_diversity'] = get_feature_diversity(hcc_info, 'hashtag')
+    g_vec['G_mention_diversity'] = get_feature_diversity(hcc_info, 'mention')
 
     for u_id in a_vecs:
         f_vecs[u_id] = {**a_vecs[u_id], **g_vec}
+
+
+def get_feature_diversity(hcc_info, feature='hashtag'):
+    feat_map = hcc_info['%ss_used' % feature]  # feature : number of uses
+    all_uses = sum(feat_map.values())
+    return len(feat_map.keys()) / float(all_uses) if all_uses else 0.0
+
+
+def get_irr(hcc_info):
+    int_rt_count = hcc_info['int_rt_t_count']
+    rt_count = hcc_info['rt_t_count']
+    return (int_rt_count / float(rt_count)) if rt_count else 0
+
+
+def get_imr(hcc_info):
+    m_map = hcc_info['mentions_used']
+    m_count = sum(m_map.values())
+    int_m_count = sum([c for id, c in m_map.items() if id in hcc_info['users']])
+    return (int_m_count / float(m_count)) if m_count else 0
 
 
 def iat_mean(iatss):
@@ -205,9 +241,9 @@ if __name__=='__main__':
             hcc_infos[hcc['community_id']] = hcc
 
     accts = {}  # account ID : profile
-    line_count = 0
     min_ts = max_ts = None
     with utils.open_file(tweets_file) as f:
+        line_count = 0
         for l in f:
             line_count = utils.log_row_count(line_count, DEBUG)
             t = json.loads(l)
