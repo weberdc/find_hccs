@@ -137,7 +137,7 @@ def build_f_vecs_for(hcc_info, hcc, accts, corpus_duration_d, f_vecs):
     g_vec['G_interarrival_time-stddev'] = iat_stdev(g_iatss)
     g_vec['G_account_age-mean'] = statistics.mean(all_ages)
     g_vec['G_account_age-stddev'] = statistics.stdev(all_ages)
-    g_vec['G_similarity'] = 0
+    # g_vec['G_similarity'] = calc_content_similarity(hcc_info['tweets'])
     g_vec['G_density'] = (2.0 * len(E)) / (len(V) * (len(V) - 1))
     g_vec['G_shortest_path-mean'] = nx.average_shortest_path_length(hcc, weight='weight')
     g_vec['G_clustering_coefficient'] = sum(clustering(hcc, weight='weight').values()) / float(len(V))  #average_clustering(hcc)
@@ -152,6 +152,10 @@ def build_f_vecs_for(hcc_info, hcc, accts, corpus_duration_d, f_vecs):
 
     for u_id in a_vecs:
         f_vecs[u_id] = {**a_vecs[u_id], **g_vec}
+
+
+def calc_content_similarity(tweets):
+    pass
 
 
 def get_feature_diversity(hcc_info, feature='hashtag'):
@@ -272,5 +276,5 @@ if __name__=='__main__':
                 writer.writerow(r)
 
 
-    log('\nHaving started at %s,' % STARTING_TIME)
+    log('Having started at %s,' % STARTING_TIME)
     log('now ending at     %s' % utils.now_str())
