@@ -167,6 +167,13 @@ def calc_cluster_coefficient(hcc, V):
 
 
 def calc_content_similarity(tweets):
+    # Ideas for similarity:
+    # - build n-gram/word doc/term matrix, use TF-IDF for cell values, calculate
+    #   average cosine similarity amongst the tweets and/or user corpora
+    #   - what if one corpus is big and one is small - how does that affect it?
+    # - find average overlap in words/n-grams amongst tweets
+    #   - lots of short tweets might cause lots of low similarity values
+    #   - lots of tweets vs few tweets might affect things too
     pass
 
 
