@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 
 TOPICS = [
   'RETWEET', 'RETWEETS',
+  'QUOTE', 'QUOTES',
   'HASHTAG', 'HASHTAGS', 'ALL_HASHTAGS',
   'URL', 'URLS', 'ALL_URLS',
   'POST_URL', 'POST_URLS', 'ALL_POST_URLS',
@@ -122,6 +123,12 @@ def write_rows_from_tweet(csv_f, t, topic):
         rt_id = t_id
         ot_id = utils.get_ot_from_rt(t)['id_str']
         csv_f.writerow([ts, source, target, 'RETWEET', rt_id, ot_id])
+    elif topic in ['QUOTE', 'QUOTES'] and not utils.is_rt(t) and utils.is_qt(t):
+        ot = t['quoted_status']
+        target = utils.get_uid(ot)
+        qt_id = t_id
+        ot_id = ot['id_str']
+        csv_f.writerow([ts, source, target, 'QUOTE', qt_id, ot_id])
     elif topic in ['REPLY', 'REPLIES']:
         target = t['in_reply_to_user_id_str']
         ot_id  = t['in_reply_to_status_id_str']
@@ -181,6 +188,9 @@ def write_rows_from_ira_row(csv_f, r, topic):
         rt_id = r['tweetid']
         ot_id = r['retweet_tweetid']
         csv_f.writerow([ts, source, target, 'RETWEET', rt_id, ot_id])
+    elif topic in ['QUOTE', 'QUOTES'] and r['quoted_tweet_tweetid'] == 'true':
+        print('QUOTE is unsupported for IRA datasets')
+        sys.exit()
     elif topic in ['REPLY', 'REPLIES']:
         target = r['in_reply_to_userid']
         ot_id  = r['in_reply_to_tweetid']
@@ -248,6 +258,7 @@ if __name__=='__main__':
 
     log('Extracting %s from %s' % (topic, tweets_file))
 
+    tweet_count = 0
     with open(csv_file, mode='w', newline='\n', encoding='utf-8') as out_f:
         write_header(out_f, topic)
         csv_writer = csv.writer(out_f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -257,15 +268,18 @@ if __name__=='__main__':
         if ira:
             csv_reader = csv.DictReader(in_f)
             for row in csv_reader:
+                tweet_count += 1
                 line_count = utils.log_row_count(line_count, DEBUG)
                 write_rows_from_ira_row(csv_writer, row, topic)
         else:
             for l in in_f:
+                tweet_count += 1
                 line_count = utils.log_row_count(line_count, DEBUG)
                 t = json.loads(l)
                 write_rows_from_tweet(csv_writer, t, topic)
 
     log()
+    log('Processed %d tweets' % tweet_count)
     log('Wrote to %s' % csv_file)
 
     log('Having started at %s,' % STARTING_TIME)

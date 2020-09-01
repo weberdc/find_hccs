@@ -86,6 +86,10 @@ def is_rt(t):
     return get_ot_from_rt(t) != None
 
 
+def is_qt(t):
+    return 'quoted_status' in t and t['quoted_status'] != None
+
+
 def is_reply(t):
     return 'in_reply_to_status_id_str' in t and t['in_reply_to_status_id_str'] != None
 
