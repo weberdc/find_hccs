@@ -42,6 +42,17 @@ class Options:
         return self.parser.parse_args(args)
 
 
+def add_reason_node(g, r):
+    g.add_node(r, label=r, _node_type='REASON')
+
+
+def link_to_reason(g, n, r):
+    if not g.has_edge(n, r):
+        g.add_edge(n, r, weight=1.0, _edge_type='REASON')
+    else:
+        g[n][r]['weight'] += 1.0
+
+
 DEBUG=False
 def log(msg):
     if DEBUG: utils.eprint('[%s] %s' % (utils.now_str(), msg))
@@ -72,15 +83,18 @@ if __name__=='__main__':
             to_add.append( (u, v, r) )
 
     for u, v, r in to_add:
-        if r not in g: g.add_node(r, label=r, _node_type='REASON')
-        if not g.has_edge(u, r):
-            g.add_edge(u, r, weight=1.0)
-        else:
-            g[u][r]['weight'] += 1.0
-        if not g.has_edge(v, r):
-            g.add_edge(v, r, weight=1.0)
-        else:
-            g[v][r]['weight'] += 1.0
+        if r not in g: add_reason_node(g, r)
+            # g.add_node(r, label=r, _node_type='REASON')
+        link_to_reason(g, u, r)
+        link_to_reason(g, v, r)
+        # if not g.has_edge(u, r):
+        #     g.add_edge(u, r, weight=1.0, _edge_type='REASON')
+        # else:
+        #     g[u][r]['weight'] += 1.0
+        # if not g.has_edge(v, r):
+        #     g.add_edge(v, r, weight=1.0, _edge_type='REASON')
+        # else:
+        #     g[v][r]['weight'] += 1.0
 
     nx.write_graphml(g, out_file)
 
