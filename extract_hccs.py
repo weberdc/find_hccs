@@ -132,7 +132,7 @@ def ask_for_threshold(weights):
         excluded = estimate_excluded(threshold, weights)
         msg = 'The threshold %f will exclude %d%% of edges. Is that okay? [y/N] '
         answer = input(msg % (threshold, int((100.0 * excluded / n))))
-        if answer[0] in 'Nn':
+        if not answer or answer[0] in 'Nn':
             threshold = float(input('What threshold would you like to use? '))
         else:
             happy = True
