@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 
+import calendar
 import csv
 import gzip
 import json
 import re
 import sys
+import time
 import utils
 
 from argparse import ArgumentParser
+from datetime import datetime
+from dateutil import parser
+# from tzlocal import get_localzone # https://stackoverflow.com/a/3168394
 
 
 TOPICS = [
-  'RETWEET', 'RETWEETS',
+  'RETWEET', 'RETWEETS', 'RT', 'RTS',
   'QUOTE', 'QUOTES',
   'HASHTAG', 'HASHTAGS', 'ALL_HASHTAGS',
   'URL', 'URLS', 'ALL_URLS',
@@ -67,7 +72,7 @@ class Options:
 
 
 def write_header(f, topic):
-    if topic in ['RETWEET', 'RETWEETS', 'REPLY', 'REPLIES']:
+    if topic in ['RETWEET', 'RETWEETS', 'RT', 'RTS', 'REPLY', 'REPLIES']:
         f.write('timestamp,source,target,interaction,rt_id,ot_id\n')
     elif topic in ['MENTION', 'MENTIONS']:
         f.write('timestamp,source,target,interaction,t_id,mentioned_screen_name\n')
@@ -114,10 +119,18 @@ def write_url_row(csv_f, topic, url, ts, source, t_id):
 TWEET_URL_REGEX = re.compile('https://twitter.com/[^/]*/status/.*')
 def write_rows_from_tweet(csv_f, t, topic):
     global REPLY_COUNT  # declare that we want to change REPLY_COUNT
-    ts = utils.extract_ts_s(t['created_at'])
+    try:
+        ts = utils.extract_ts_s(t['created_at'])
+        # dt = parser.parse(t['created_at'])
+        # ts = int(calendar.timegm(dt.timetuple()))
+    except TypeError as e:
+        # ts = int(int(t['created_at']) / 1000 - utc_offset) #- time.timezone #+ (time.gmtime() - time.localtime()) # there's a chance this is a millseconds (twarc)
+        # ts = calendar.timegm ( datetime.utcfromtimestamp(int(t['created_at']/1000.0) - utc_offset).timetuple() )
+        raise e
+    ts = int(ts) # force it to an int
     t_id = t['id_str']
     source = utils.get_uid(t)
-    if topic in ['RETWEET', 'RETWEETS'] and utils.is_rt(t):
+    if topic in ['RETWEET', 'RETWEETS', 'RT', 'RTS'] and utils.is_rt(t):
         ot = utils.get_ot_from_rt(t)
         target = utils.get_uid(ot)
         rt_id = t_id
@@ -183,7 +196,7 @@ def write_rows_from_ira_row(csv_f, r, topic):
     ts = utils.extract_ts_s(r['tweet_time'], fmt=utils.IRA_TS_FORMAT)
     t_id = r['tweetid']
     source = r['userid']
-    if topic in ['RETWEET', 'RETWEETS'] and r['is_retweet'] == 'true':
+    if topic in ['RETWEET', 'RETWEETS', 'RT', 'RTS'] and r['is_retweet'] == 'true':
         target = r['retweet_userid']
         rt_id = r['tweetid']
         ot_id = r['retweet_tweetid']

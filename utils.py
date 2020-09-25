@@ -1,6 +1,9 @@
 from __future__ import print_function
 from datetime import datetime
+from dateutil import parser
 
+
+import calendar
 import gzip
 import json
 import ntpath
@@ -95,7 +98,8 @@ def is_reply(t):
 
 
 # e.g. Tue Dec 31 06:15:21 +0000 2019
-TWITTER_TS_FORMAT='%a %b %d %H:%M:%S +0000 %Y'
+# TWITTER_TS_FORMAT='%a %b %d %H:%M:%S +0000 %Y'
+TWITTER_TS_FORMAT='%a %b %d %H:%M:%S %z %Y' # BEWARE: Using %z here might screw up other code.
 DCW_TS_FORMAT = '%Y%m%d_%H%M%S'  # 20110426_085755
 IRA_TS_FORMAT='%Y-%m-%d %H:%M'  # 2011-04-26 08:57
 NOW_TS_FORMAT='%Y-%m-%d %H:%M:%S'  # 2011-04-26 08:57:23
@@ -107,21 +111,24 @@ def parse_ts(ts_str, fmt=TWITTER_TS_FORMAT):
 
 
 def ts_2_epoch_seconds(ts):
-    return int(time.mktime(ts.timetuple()))
+    return int(calendar.timegm(ts.timetuple()))  # GMT time
+    # return int(time.mktime(ts.timetuple()))    # local time
 
 
 def extract_ts_s(ts_str, fmt=TWITTER_TS_FORMAT):
-    return ts_2_epoch_seconds(parse_ts(ts_str, fmt))
+    dt = parse_ts(ts_str, fmt) # parser.parse(ts_str)
+    return int(calendar.timegm(dt.timetuple()))
+    # return ts_2_epoch_seconds(parse_ts(ts_str, fmt))
 
 
 def epoch_seconds_2_ts(ts_sec):
-    return datetime.fromtimestamp(int(ts_sec))
+    return datetime.utcfromtimestamp(int(ts_sec)) # utcfrom... or from...?
 
 
 def extract_ts(t, fmt=TWITTER_TS_FORMAT):
     # returns timestamp seconds since the epoch
     if 'timestamp_ms' in t:
-        return int(t['timestamp_ms'])
+        return int(t['timestamp_ms']) / 1000.0
     else:
         return extract_ts_s(t['created_at'], fmt)
         # return ts_2_epoch_seconds(parse_ts(t['created_at'], fmt))
