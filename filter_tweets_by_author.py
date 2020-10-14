@@ -12,7 +12,7 @@ from datetime import datetime
 
 class Options:
     def __init__(self):
-        self._init_parser('filter_tweets_by_author.py -t|--tweets_file <file of tweets> -a|--authors-file <author_id_file> [--pretty]')
+        self._init_parser('filter_tweets_by_author.py -t|--tweets_file <file of tweets> -a|--authors-file <author_id_file> [--count] [--pretty]')
 
     def _init_parser(self, usage):
         self.parser = ArgumentParser(usage=usage, conflict_handler='resolve')
@@ -25,7 +25,7 @@ class Options:
         )
         self.parser.add_argument(
             '-o', '--out-file',
-            required=True,
+            default='-',
             dest='out_file',
             help='File to write matching tweets to'
         )
@@ -35,6 +35,13 @@ class Options:
             required=True,
             dest='authors_file',
             help='Authors file (default: "")'
+        )
+        self.parser.add_argument(
+            '-c', '--count',
+            action='store_true',
+            default=False,
+            dest='count',
+            help='Just count the tweets (default: False)'
         )
         self.parser.add_argument(
             '--pretty',
@@ -61,6 +68,20 @@ TWITTER_TS_FORMAT = '%a %b %d %H:%M:%S +0000 %Y'  #Tue Apr 26 08:57:55 +0000 201
 def parse_ts(ts_str, fmt=TWITTER_TS_FORMAT):
     time_struct = time.strptime(ts_str, fmt)
     return datetime.fromtimestamp(time.mktime(time_struct))
+
+
+def process_lines(in_f, action):
+    match_count = 0
+    count = 0
+    for l in f:
+        count += 1
+        if DEBUG:
+            if count % 10000 == 0: log('%8d' % count)
+        t = json.loads(l)
+        if t['user']['id_str'] in ids_of_interest:
+            action(l) #o.write(l)
+            match_count += 1
+    return (count, match_count)
 
 
 DEBUG=False
@@ -93,15 +114,21 @@ if __name__=='__main__':
     count = 0
     match_count = 0
     with my_open_file(tweets_file, tweets_file[-1] in 'zZ') as f:
-        with open(opts.out_file, 'w', encoding='utf-8') as o:
-            for l in f:
-                count += 1
-                if DEBUG:
-                    if count % 10000 == 0: log('%8d' % count)
-                t = json.loads(l)
-                if t['user']['id_str'] in ids_of_interest:
-                    o.write(l)
-                    match_count += 1
+        if opts.count:
+            (count, match_count) = process_lines(f, lambda l: None)
+        else:
+            with open(opts.out_file, 'w', encoding='utf-8') as o:
+                (count, match_count) = process_lines(f, lambda l: o.write(l))
+
+        # with open(opts.out_file, 'w', encoding='utf-8') as o:
+        #     for l in f:
+        #         count += 1
+        #         if DEBUG:
+        #             if count % 10000 == 0: log('%8d' % count)
+        #         t = json.loads(l)
+        #         if t['user']['id_str'] in ids_of_interest:
+        #             o.write(l)
+        #             match_count += 1
 
     utils.eprint('all lines: %d' % count)
     utils.eprint('matching:  %d' % match_count)
