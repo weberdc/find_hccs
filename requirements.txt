@@ -29,7 +29,7 @@ clyent==1.2.2
 colorama==0.4.1
 comtypes==1.1.7
 contextlib2==0.5.5
-cryptography==2.7
+cryptography==3.2
 cycler==0.10.0
 Cython==0.29.12
 cytoolz==0.10.0

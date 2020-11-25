@@ -5,7 +5,7 @@ _Finding sets of accounts that appear to coordinate their behaviour in social me
 This project provides a pipeline of processing steps to uncover _highly coordinating communities_ (HCCs) within _latent coordination networks_ (LCNs) built through inferring connects between social media actors based on their behaviour. It also provides a number of supporting scripts and analysis tools for evaluating the pipeline's performance, plus datasets on which it has been tested for
 the following publication:
 
-- Weber, D. and Neumann, F., "Who's in the Gang? Revealing Coordinating Communities in Social Media.", In _The 2020 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining_, _ASONAM_, Leiden, The Netherlands, 7-10 December, 2020, accepted. (arXiv: https://arxiv.org/abs/2010.08180)
+Weber, D. & Neumann, F., "Who's in the gang? Revealing coordinating communities on social media", _The 2020 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining_, _ASONAM 2020_, The Hague, Netherlands, 7-10 December, (accepted). ([arXiv:2010.08180](https://arxiv.org/abs/2010.08180))
 
 ## Dependencies
 
