@@ -85,7 +85,7 @@ def write_header(f, topic):
 
 
 def check_url(url):
-    return len(url) >= 4 and url[:4] == 'http'
+    return len(url) >= 4 and url[:4].lower() == 'http'
     # if 'http' not in url:
     #     utils.eprint('URL in tweet [%s] is invalid: %s' % (t_id, url))
     #     return False
@@ -94,7 +94,7 @@ def check_url(url):
 
 
 def write_url_row(csv_f, topic, url, ts, source, t_id):
-    if 'http' not in url:
+    if not url.lower().startswith('http'):
         utils.eprint('URL in tweet [%s] is invalid: %s' % (t_id, url))
         return False
 
