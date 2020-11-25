@@ -48,9 +48,10 @@ def add_reason_node(g, r):
 
 def link_to_reason(g, n, r):
     if not g.has_edge(n, r):
-        g.add_edge(n, r, weight=1.0, _edge_type='REASON')
+        g.add_edge(n, r, weight=1.0, reason_weight=1.0, _edge_type='REASON')
     else:
         g[n][r]['weight'] += 1.0
+        g[n][r]['reason_weight'] += 1.0
 
 
 DEBUG=False
