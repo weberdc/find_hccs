@@ -195,6 +195,7 @@ def mentions_from(tweet, include_retweet=False):
 
 
 def extract_domain(url, lower=False):
+    url = url.lower()  # it won't matter for the domain
     header = 'https://'
     if header not in url:
         header = 'http://'
