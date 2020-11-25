@@ -340,8 +340,16 @@ def add_community_labels(g):
 def dry_run_print_graph_info(lcn, hccs, w_property, no_header):
     # print('\nLCN & HCCs:')
     # print(nx.info(hccs))
-    lcn_comps = sorted(list(nx.connected_component_subgraphs(lcn)), key=len, reverse=True)
-    hcc_comps = sorted(list(nx.connected_component_subgraphs(hccs)), key=len, reverse=True)
+    lcn_comps = sorted(
+        [lcn.subgraph(c).copy() for c in nx.connected_components(lcn)],
+        key=len,
+        reverse=True
+    )
+    hcc_comps = sorted(
+        [hccs.subgraph(c).copy() for c in nx.connected_components(hccs)],
+        key=len,
+        reverse=True
+    )
 
     if not no_header:
         print(
