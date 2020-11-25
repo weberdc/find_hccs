@@ -3,9 +3,14 @@
 _Finding sets of accounts that appear to coordinate their behaviour in social media._
 
 This project provides a pipeline of processing steps to uncover _highly coordinating communities_ (HCCs) within _latent coordination networks_ (LCNs) built through inferring connects between social media actors based on their behaviour. It also provides a number of supporting scripts and analysis tools for evaluating the pipeline's performance, plus datasets on which it has been tested for
-the following publication:
+the following publications:
 
-Weber, D. & Neumann, F., "Who's in the gang? Revealing coordinating communities on social media", _The 2020 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining_, _ASONAM 2020_, The Hague, Netherlands, 7-10 December, (accepted). ([arXiv:2010.08180](https://arxiv.org/abs/2010.08180))
+- Weber, D. and Neumann, F. 2020. "Who's in the gang? Revealing coordinating communities on social media", _The 2020 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining_, _ASONAM 2020_, The Hague, Netherlands, 7-10 December, (accepted). ([arXiv:2010.08180](https://arxiv.org/abs/2010.08180))
+
+- Weber, D. 2019. "On Coordinated Online Behaviour", Poster presented at _The Fourth Annual Australian Social Network Analysis Conference 2019_, _ASNAC 2019_, Adelaide, South Australia, 28-29 November. Available [here](https://www2.slideshare.net/derekweber/on-coordinated-online-behaviour)
+- Weber, D., Nasim, M., Falzon, L. and Mitchell, L. 2020. "Revealing social bot communities through coordinated behaviour during the 2020 US Democratic and Republican National Conventions", Talk presented at _The Fifth Annual Australian Social Network Analysis Conference 2020_, _ASNAC 2020_, Perth, Western Australia, 26-27 November.
+
+
 
 ## Dependencies
 
@@ -15,7 +20,9 @@ The code was developed using using Python 3.6.x and Anaconda. Dependencies are l
 
 The 10,000 foot view of the pipeline:
 
-Infer links between social media accounts based on commonalities in their interactions (thus building a weighted graph of accounts), and then extract highly connected communities, on the basis that those who are connected at anomalously high frequencies may be doing so deliberately.
+Infer links between social media accounts based on commonalities in their interactions (thus building a weighted graph of accounts, a _latent coordination network (LCN)_), and then extract highly connected communities, on the basis that those who are connected at anomalously high frequencies may be doing so deliberately.
+
+To deal with large datasets (more than several hundred thousand tweets), we first extract relevant elements out to CSV files, and then process them to infer links between accounts (to build the LCN). Although this results in intermediate files, it provides a degree of flexibility. E.g., if I extract retweet information from a corpus of tweets with `raw_to_csv.py` (see below), then I can either infer links between accounts based on what individual tweets they both retweet **or** _who_ or _which account_ they both retweet.
 
 The steps to the pipeline are as follows:
 
@@ -89,6 +96,7 @@ the paper. These include:
 - `build_hccs_timeline_vis.py`: Creates a plot of HCC activity over time. If `merging` is applied, then `DBA.py` (dynamic barycentre averaging) is used to temporally average the HCCs timelines together.
 - `compare_alpha_by_window_vis.py`: Used to examine the effect of using the decayed sliding window and variations in the decay factor.
 - `compare_hcc_methods_by_window_vis.py`: Used to examine the overlap in the HCCs found with the different community detection methods.
+- `compare_window_by_hcc_method_vis.py`: Used to examine the overlap in the HCCs found with the different window sizes, keeping the community detection method fixed.
 - `DBA.py`: The [dynamic barycentre averaging](https://github.com/fpetitjean/DBA) used by `build_hccs_timeline_vis.py`.
 - `expand_with_reasons.py`: Fleshes out an HCC by creating new nodes from the _reasons_ recorded for connecting the HCC nodes - i.e., if they retweeted the same tweet, a _reason_ would be the ID of the tweet they both retweeted. By examining this larger graph, it is possible to see which HCCs are related, through which _reason_ nodes connect them.
 - `nodes_in_common.py`: Provided with two or more graphml files, determines what overlap there is in the graphs' nodes (based on a provided attribute, e.g. "label"), and prints out the result as a table ready for inclusion into a LaTeX paper.
@@ -103,6 +111,8 @@ the paper. These include:
 - `decorate_network.py`: Adds attributes to the nodes of a GraphML file based on information from their tweet corpus and other sources.
 - `filter_ira_csv_by_time.py`: Filters the Twitter IRA dataset CSV based on provided start and end timestamps.
 - `filter_tweets_by_author.py`: Returns the tweets in a corpus posted by particular accounts. The order of filtered posts matches that in the corpus.
+- `filter_csv.py`: Filters rows of a CSV file with a provided list of keywords, either ensuring they're included or excluded, as required.
+- `filter_graph_by_edge_weight.py`: Filters a GraphML graph with weighted edges, keeping edges between the provided minimum and maximum values.
 - `ira_stats.py`: Provides some simple statistics of a given IRA-formatted corpus.
 - `net_log_utils.py`: Utility functions that relate to network matters (separated to avoid dependencies, allowing some scripts to run within a cygwin environment).
 - `sort_csv_by_timestamp.py`: Sorts the rows in an IRA-formatted CSV by a timestamp in the 'timestamp' column.
@@ -110,4 +120,4 @@ the paper. These include:
 
 The `support` folder holds a number of scripts used for running the pipeline elements with a variety of parameters including window size, theta (for FSA\_V) and threshold parameters.
 
-## Example run-through
+<!-- ## Example run-through -->
