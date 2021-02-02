@@ -15,7 +15,7 @@ beautifulsoup4==4.7.1
 birdspotter==0.1.4b1
 bitarray==0.9.3
 bkcharts==0.2
-bleach==3.1.4
+bleach==3.3.0
 bokeh==1.3.0
 boto==2.49.0
 botometer==1.3
