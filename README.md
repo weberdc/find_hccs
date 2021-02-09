@@ -9,7 +9,7 @@ the following publications:
 
 - Weber, D. 2019. "On Coordinated Online Behaviour", Poster presented at _The Fourth Annual Australian Social Network Analysis Conference 2019_, _ASNAC 2019_, Adelaide, South Australia, 28-29 November. Available [here](https://www2.slideshare.net/derekweber/on-coordinated-online-behaviour)
 - Weber, D., Nasim, M., Falzon, L. and Mitchell, L. 2020. "Revealing social bot communities through coordinated behaviour during the 2020 US Democratic and Republican National Conventions", Talk presented at _The Fifth Annual Australian Social Network Analysis Conference 2020_, _ASNAC 2020_, Perth, Western Australia, 26-27 November.
-
+- Weber, D., Nasim, M., Falzon, L. and Mitchell, L. 2020. "#ArsonEmergency and Australia’s “Black Summer”: A study of polarisation and its broader effect on the online discussion", Talk presented at _The Fifth Annual Australian Social Network Analysis Conference 2020_, _ASNAC 2020_, Perth, Western Australia, 26-27 November.
 
 
 ## Dependencies
@@ -84,8 +84,7 @@ The IDs of the tweets in the election dataset are provided in the `data` folder,
 
 ## The analyses
 
-A number of analyses and visualisations were prepared as part of the writing of
-the paper. These include:
+A number of analyses and visualisations were prepared as part of the writing of the paper. These include:
 
 - `interrogate_hccs.py`: Inspects the HCCs with the context of the LCN they came from, the tweets they posted and, optionally, [Botomoeter](https://botometer.iuni.iu.edu/#!/) bot rating information, and produces a rich JSON structure of information regarding the each HCC and its members' behaviour within the corpus.
 - `run_hccs_reports.py`: Produces a number reports as CSV based on the interrogation results.
@@ -103,6 +102,12 @@ the paper. These include:
 - `top_hashtags_barchart_vis.py`: Produces a horizontal bar chart of the most used hashtags by the most active HCCs.
 - `build_adr_vis.py`: Produces a scatter plot of account diversity ratio values (|accounts|/|tweets|) for each HCC in provided analyses (produced by `interrogate_hccs.py`)
 - `build_itd_vis.py`: Produces a scatter plot of inter-arrivel time distributions for all HCCs in an analysis file (JSON). Each column is an HCC's posting timeline.
+
+To build and use the machine learning classifier components, the following scripts are required, once HCCs have been detected:
+- `hcc_graphml_to_csv.py`: extracts the HCC groups into a simple CSV with two columns, so each row consists of a community ID unique within the GraphML file and the account ID of a node within the HCC.
+- `extract_feature_vectors_for_hcc_classifier(-ira).py`: using the HCC groupings, it builds the activity networks surrounding each HCC (i.e., the activity its members engage in, within the corpus) and then creates a feature vector for each member based on their profile details and also the details of the HCC (so each member's feature vector includes details of its HCC, which are duplicated amongst all the HCC's members).
+- `train_hcc_classifier`: using positive feature vectors and non-positive feature vectors it trains a machine learning model to distinguish between the two using the SVM, RandomForest or Bagging Positive Unlabelled (BaggingPU) algorithm.
+- `test_hcc_classifier`: applies the trained classifier against the feature vectors extracted for other discovered HCCs. Includes writing out ROC and AUC charts, if required.
 
 ## Supporting files and scripts
 

@@ -243,7 +243,7 @@ if __name__=='__main__':
             fig.colorbar(
                 img,
                 ax=ax,
-                cmap='viridis',
+                # cmap='viridis',
                 cax=cax
             )
 
