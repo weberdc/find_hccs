@@ -217,7 +217,8 @@ if __name__=='__main__':
 
     def plot(fig, ax, mtx, title, colourbar=False):
         img_opts = {
-            'interpolation' : 'None', 'origin' : 'upper',
+            'interpolation' : 'Nearest', #'None', None will result in blurry PDFs in LaTeX docs
+            'origin' : 'upper',
             'vmin' : 0, #global_min,
             'vmax' : global_max
         }
