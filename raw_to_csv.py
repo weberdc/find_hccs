@@ -60,6 +60,13 @@ class Options:
             help='Expect Twitter\'s IRA dataset (default: False)'
         )
         self.parser.add_argument(
+            '--exclude-retweets', '-xrts',
+            dest='exclude_rts',
+            action='store_true',
+            default=False,
+            help='Exclude the implicit mention in retweets when considering mentions (default: False)'
+        )
+        self.parser.add_argument(
             '-v', '--verbose',
             dest='verbose',
             action='store_true',
@@ -117,7 +124,7 @@ def write_url_row(csv_f, topic, url, ts, source, t_id):
 
 
 TWEET_URL_REGEX = re.compile('https://twitter.com/[^/]*/status/.*')
-def write_rows_from_tweet(csv_f, t, topic):
+def write_rows_from_tweet(csv_f, t, topic, excl_rts):
     global REPLY_COUNT  # declare that we want to change REPLY_COUNT
     try:
         ts = utils.extract_ts_s(t['created_at'])
@@ -126,7 +133,8 @@ def write_rows_from_tweet(csv_f, t, topic):
     except TypeError as e:
         # ts = int(int(t['created_at']) / 1000 - utc_offset) #- time.timezone #+ (time.gmtime() - time.localtime()) # there's a chance this is a millseconds (twarc)
         # ts = calendar.timegm ( datetime.utcfromtimestamp(int(t['created_at']/1000.0) - utc_offset).timetuple() )
-        raise e
+        # raise e
+        ts = int(t['created_at']) / 1000
     ts = int(ts) # force it to an int
     t_id = t['id_str']
     source = utils.get_uid(t)
@@ -160,6 +168,8 @@ def write_rows_from_tweet(csv_f, t, topic):
         for url in set(utils.expanded_urls_from(t, include_retweet=True)):
             write_url_row(csv_f, topic, url, ts, source, t_id)
     elif topic in ['MENTION', 'MENTIONS', 'ALL_MENTIONS']:
+        if excl_rts and utils.is_rt(t):
+            return
         mention_objs = utils.mentions_from(t, include_retweet=True)
         if is_empty(mention_objs):
             return
@@ -192,7 +202,7 @@ def parse_ira_mentions(mentions_str):
     return list(map(lambda s: s.strip(), mentions_str[1:-1].split(',')))
 
 
-def write_rows_from_ira_row(csv_f, r, topic):
+def write_rows_from_ira_row(csv_f, r, topic, excl_rts):
     ts = utils.extract_ts_s(r['tweet_time'], fmt=utils.IRA_TS_FORMAT)
     t_id = r['tweetid']
     source = r['userid']
@@ -231,6 +241,8 @@ def write_rows_from_ira_row(csv_f, r, topic):
             # strip spurious commas
             write_url_row(csv_f, topic, ''.join(urls), ts, source, t_id)
     elif topic in ['MENTION', 'MENTIONS', 'ALL_MENTIONS']:
+        if excl_rts and r['is_retweet'] == 'true':
+            return
         mention_ids = parse_ira_mentions(r['user_mentions'])
         if is_empty(mention_ids):
             return
@@ -268,6 +280,7 @@ if __name__=='__main__':
     csv_file = opts.csv_file
     topic = opts.topic
     ira = opts.ira
+    excl_rts = opts.exclude_rts
 
     log('Extracting %s from %s' % (topic, tweets_file))
 
@@ -283,13 +296,13 @@ if __name__=='__main__':
             for row in csv_reader:
                 tweet_count += 1
                 line_count = utils.log_row_count(line_count, DEBUG)
-                write_rows_from_ira_row(csv_writer, row, topic)
+                write_rows_from_ira_row(csv_writer, row, topic, excl_rts)
         else:
             for l in in_f:
                 tweet_count += 1
                 line_count = utils.log_row_count(line_count, DEBUG)
                 t = json.loads(l)
-                write_rows_from_tweet(csv_writer, t, topic)
+                write_rows_from_tweet(csv_writer, t, topic, excl_rts)
 
     log()
     log('Processed %d tweets' % tweet_count)
