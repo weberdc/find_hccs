@@ -18,7 +18,7 @@ the following publications:
 
 ## Dependencies
 
-The code was developed using using Python 3.6.x and Anaconda. Dependencies are listed in `environment.yml` (use first) with supplementary installations with `pip` (`requirements.txt`).
+The code was developed using using Python 3.8.5 and Anaconda. Dependencies are listed in `environment.yml` (use first) with supplementary installations with `pip` (`requirements.txt`).
 
 ## The pipeline
 
