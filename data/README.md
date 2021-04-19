@@ -11,10 +11,13 @@ The filter terms used included nine hashtags (`#abetterway`, `#ausunions`, `#rea
 - `ds1_tweet-ids.txt.gz`: Dataset 1
 - `gt_tweet-ids.txt.gz`: Ground Truth
 
+<!--
 Dataset 1 and Ground Truth were used in the following publications:
 
 - Weber, D. and Neumann, F., "Who's in the Gang? Revealing Coordinating Communities in Social Media.", In _The 2020 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining_, _ASONAM_, Leiden, The Netherlands, 7-10 December, 2020, accepted. (arXiv: https://arxiv.org/abs/2010.08180)
 
+- Weber, D. and Neumann, F. 2021, "A General Method to Find Highly Coordinating Communities in Social Media through Inferred Interaction Links", _Journal of Social Network Analysis and Mining_, submitted. ([arXiv:2103.03409](https://arxiv.org/abs/2103.03409))
+-->
 
 **ArsonEmergency**: This dataset was used to examine polarisation and misinformation during Australia's Black Summer bushfires (2019-2020) and all data was collected with Twarc.
 
@@ -27,6 +30,10 @@ Dataset 1 and Ground Truth were used in the following publications:
 
 These datasets were used in the following publications:
 
-<!--
-- Weber, D., Nasim, M., Mitchell, L., and Falzon, L., "Exploring the effect of streamed social media data variations on social network analysis.", Journal of Social Network Analysis and Mining, 2021, pp. xxx-yyy. URL:  (arXiv: https://arxiv.org/abs/)
--->
+- Weber, D., Nasim, M., Falzon, L. and Mitchell, L. (2020) "#ArsonEmergency and Australia's 'Black
+Summer': Polarisation and misinformation on social media". Lecture Notes in Computer
+Science pp 159–173, DOI 10.1007/978-3-030-61841-4 11, ([arXiv:2004.00742](https://arxiv.org/abs/2004.00742))
+
+- Weber, D. and Neumann, F., "Who's in the Gang? Revealing Coordinating Communities in Social Media.", In _The 2020 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining_, _ASONAM_, Leiden, The Netherlands, 7-10 December, 2020, accepted. (arXiv: https://arxiv.org/abs/2010.08180)
+
+- Weber, D. and Neumann, F. 2021, "A General Method to Find Highly Coordinating Communities in Social Media through Inferred Interaction Links", _Journal of Social Network Analysis and Mining_, submitted. ([arXiv:2103.03409](https://arxiv.org/abs/2103.03409))
