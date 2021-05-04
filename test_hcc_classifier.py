@@ -216,7 +216,7 @@ if __name__ == '__main__':
         exp_pos_data = standardised.iloc[:len(exp_pos_data), :]
         oth_data = standardised.iloc[len(exp_pos_data):, :]
 
-    oth_labels = pd.DataFrame([RANDOMISED] * len(oth_data), columns=['Label'])  #oth_data['Label']
+    oth_labels     = pd.DataFrame([RANDOMISED]  * len(oth_data),         columns=['Label'])
     exp_pos_labels = pd.DataFrame([COORDINATED] * exp_pos_data.shape[0], columns=['Label'])
 
     print('Unlabeled data:         %s' % str(oth_data.shape))

@@ -100,9 +100,15 @@ def is_reply(t):
 # e.g. Tue Dec 31 06:15:21 +0000 2019
 # TWITTER_TS_FORMAT='%a %b %d %H:%M:%S +0000 %Y'
 TWITTER_TS_FORMAT='%a %b %d %H:%M:%S %z %Y' # BEWARE: Using %z here might screw up other code.
-DCW_TS_FORMAT = '%Y%m%d_%H%M%S'  # 20110426_085755
+DCW_TS_FORMAT= '%Y%m%d_%H%M%S'  # 20110426_085755
 IRA_TS_FORMAT='%Y-%m-%d %H:%M'  # 2011-04-26 08:57
+IRA_SHORT_TS_FORMAT='%Y-%m-%d'  # 2011-04-26
 NOW_TS_FORMAT='%Y-%m-%d %H:%M:%S'  # 2011-04-26 08:57:23
+
+
+def tsver():
+    """ Returns a timestamp string to the current second to use as a 'version' """
+    return datetime.now().strftime(DCW_TS_FORMAT)
 
 
 def parse_ts(ts_str, fmt=TWITTER_TS_FORMAT):

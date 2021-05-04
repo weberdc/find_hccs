@@ -18,6 +18,7 @@ from joblib import dump
 from pandas.api.types import CategoricalDtype
 from sklearn import svm, metrics
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_validate
 from sklearn.tree import DecisionTreeClassifier
 # from summarise_numbers import quartile
 from utils import eprint, tsver  #, fetch_lines
@@ -132,72 +133,205 @@ def classify_with_svc(pos_data, pos_labels, oth_data, oth_labels):
     return classifier
 
 
-def classify_with_svc2(pos_data, pos_labels, oth_data, oth_labels):
+COORDINATING = 1
+UNLABELED = 0
+
+
+def calc_confusion_matrix(model, X, y, positive=COORDINATING, unlabeled=UNLABELED):
+    test_data, labels = X, y
+    tp, tn, fp, fn = np.zeros(4)
+
+    predictions = model.predict(test_data)
+
+    for i in range(labels.shape[0]):
+        actual = labels.iloc[i]       # Series
+        prediction = predictions[i]  # ndarray
+        if actual == positive and prediction == positive:
+            tp += 1
+        if actual == positive and prediction == unlabeled:
+            fn += 1
+        if actual == unlabeled and prediction == positive:
+            fp += 1
+        if actual == unlabeled and prediction == unlabeled:
+            tn += 1
+
+    return dict(tp=tp, tn=tn, fp=fp, fn=fn)
+
+
+def pos_recall(model, X, y):
+    cm = calc_confusion_matrix(model, X, y)
+    tp = cm['tp']
+    fn = cm['fn']
+
+    # props to https://en.wikipedia.org/wiki/Precision_and_recall
+    return tp / (tp + fn)
+
+
+def pos_precision(model, X, y):
+    cm = calc_confusion_matrix(model, X, y)
+    tp = cm['tp']
+    fp = cm['fp']
+
+    # props to https://en.wikipedia.org/wiki/Precision_and_recall
+    return tp / (tp + fp)
+
+
+def pos_precision(model, X, y):
+    cm = calc_confusion_matrix(model, X, y)
+    tp = cm['tp']
+    fp = cm['fp']
+
+    # props to https://en.wikipedia.org/wiki/Precision_and_recall
+    return tp / (tp + fp)
+
+
+def class_f1(model, X, y, label=COORDINATING):
+    test_data, labels = X, y
+
+    return metrics.precision_recall_fscore_support(
+        labels, model.predict(test_data), pos_label=label, average='binary'
+    )[2]  # returns [precision, recall, fbeta_score, support]
+
+
+def pos_f1(model, X, y):
+    return class_f1(model, X, y, COORDINATING)
+
+
+def unl_f1(model, X, y):
+    return class_f1(model, X, y, UNLABELED)
+
+
+def classify_with_svc3(pos_data, pos_labels, oth_data, oth_labels):
+    # classifier = svm.SVC(C=1, random_state=0)#(gamma=0.001, probability=True)
     classifier = svm.SVC(gamma=0.001, probability=True)
+    classify_with(classifier, pos_data, pos_labels, oth_data, oth_labels)
+    return classifier
 
-    def train_classifier(cls, pos_data, pos_labels, oth_data, oth_labels):
+def classify_with_rfc2(pos_data, pos_labels, oth_data, oth_labels):
+    classifier = RandomForestClassifier(
+        n_estimators = 1000,  # Use 1000 trees
+        n_jobs = -1           # Use all CPU cores
+    )
+    classify_with(classifier, pos_data, pos_labels, oth_data, oth_labels)
+    return classifier
 
-        pos_count = pos_data.shape[0]
-        neg_count = oth_data.shape[0]
+def classify_with_bagging_pu2(pos_data, pos_labels, oth_data, oth_labels, hidden_size, seed=None):
+    classifier = BaggingClassifierPU(
+        DecisionTreeClassifier(),
+        random_state = seed,  # random number generator seed
+        n_estimators = 1000,  # 1000 trees as usual
+        # max_samples = oth_labels.shape[0],# sum(y), # Balance the positives and unlabeled in each bag
+        n_jobs = -1           # Use all cores
+    )
+    classify_with(classifier, pos_data, pos_labels, oth_data, oth_labels)
+    return (classifier, None)
 
-        print('pre-loop pos_data: %s' % str(pos_data.shape))
-        print('pre-loop oth_data: %s' % str(oth_data.shape))
 
-        for i in range(pos_count):
-            print('i: %d' % i)
-            test_pos_data   = pos_data.iloc[i]
-            test_pos_labels = pos_labels.iloc[i]
-            print('test_pos_data:   %s' % str(test_pos_data.shape))
-            print('test_pos_labels: %s' % str(test_pos_labels.shape))
-            if i == 0:
-                train_pos_data   = pos_data.iloc[1:]
-                train_pos_labels = pos_labels.iloc[1:]
-            elif i == pos_count - 1:
-                train_pos_data   = pos_data.iloc[:-1]
-                train_pos_labels = pos_labels.iloc[:-1]
-            else:
-                train_pos_data   = pd.concat([pos_data.iloc[:i],   pos_data.iloc[i+1:]])
-                train_pos_labels = pd.concat([pos_labels.iloc[:i], pos_labels.iloc[i+1:]])
-            print('train_pos_data:   %s' % str(train_pos_data.shape))
-            print('train_pos_labels: %s' % str(train_pos_labels.shape))
-            train_pos_data   = train_pos_data.sample(neg_count // 2, replace=True)
-            train_pos_labels = train_pos_labels.sample(neg_count // 2, replace=True)
-            training_data   = pd.concat([train_pos_data,   oth_data[:neg_count // 2]])
-            training_labels = pd.concat([train_pos_labels, oth_labels[:neg_count // 2]])
-            # test_data       = oth_data[neg_count // 2:].append(test_pos_data, ignore_index=True)  # pd.concat([test_pos_data,    oth_data[neg_count // 2:]])
-            # test_labels     = oth_labels[neg_count // 2:].append(test_pos_labels, ignore_index=True)  # pd.concat([test_pos_labels,  oth_labels[neg_count // 2:]])
+def classify_with(classifier, pos_data, pos_labels, oth_data, oth_labels):
 
-            test_data       = oth_data[neg_count // 2:]
-            test_labels     = oth_labels[neg_count // 2:]
-            for j in range(10):
-                test_data = test_data.append(test_pos_data, ignore_index=True)  # pd.concat([test_pos_data,    oth_data[neg_count // 2:]])
-                test_labels = test_labels.append(test_pos_labels, ignore_index=True)  # pd.concat([test_pos_labels,  oth_labels[neg_count // 2:]])
+    data   = pos_data.append(oth_data, ignore_index=True)
+    labels = pos_labels.append(oth_labels, ignore_index=True)['Label']
 
-            # training_data   = pd.concat([pos_data[:pos_count // 2], oth_data[:neg_count // 2]])
-            # training_labels = pd.concat([pos_labels[:pos_count // 2], oth_labels[:neg_count // 2]])
-            # test_data       = pd.concat([pos_data[pos_count // 2:], oth_data[neg_count // 2:]])
-            # test_labels     = pd.concat([pos_labels[pos_count // 2:], oth_labels[neg_count // 2:]])
+    scoring = {
+        'f1': 'f1',
+        'precision': 'precision',
+        'recall': 'recall',
+        'accuracy': 'accuracy',
+        'precision_macro': 'precision_macro',
+        'recall_macro': 'recall_macro',
+        'pos_recall': pos_recall,
+        'pos_precision': pos_precision,
+        'pos_f1': pos_f1,
+        'unl_f1': unl_f1,
+    }
 
-            print('test data shape:  %s' % str(test_data.shape))
-            print('test label shape: %s' % str(test_labels.shape))
-            print('train data shape:  %s' % str(training_data.shape))
-            print('train label shape: %s' % str(training_labels.shape))
+    scores = cross_validate(classifier, data, labels, cv=10, scoring=scoring)
 
-            # We learn the digits on the first half of the digits
-            classifier.fit(training_data, training_labels)
+    print(f'Accuracy: {scores["test_accuracy"].mean():.2f}')
+    print(f'f_{{1p}}: {scores["test_pos_f1"].mean():.2f}')
+    print(f'f_{{1u}}: {scores["test_unl_f1"].mean():.2f}')
+    print(f'P_prec:   {scores["test_pos_precision"].mean():.2f}')
+    print(f'P_recall: {scores["test_pos_recall"].mean():.2f}')
 
-            expected = test_labels  # pd.concat([pos_labels, oth_labels[neg_count // 2:]])
-            predicted = classifier.predict(test_data)
+    classifier.fit(data, labels)  # now train on everything
 
-            print("Classification report for classifier %s:\n%s\n" % (
-                classifier, metrics.classification_report(expected, predicted)
-            ))
-            # print('F1-score:%s' % metrics.f1_score(expected, predicted.ravel()))
-            print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
+    expected  = labels
+    predicted = classifier.predict(data)
 
-    train_classifier(classifier, pos_data, pos_labels, oth_data, oth_labels)
+    print("Classification report for classifier %s:\n%s\n" % (
+        classifier, metrics.classification_report(expected, predicted)
+    ))
+    print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
 
     return classifier
+
+
+# def classify_with_svc2(pos_data, pos_labels, oth_data, oth_labels):
+#     classifier = svm.SVC(gamma=0.001, probability=True)
+#
+#     def train_classifier(cls, pos_data, pos_labels, oth_data, oth_labels):
+#
+#         pos_count = pos_data.shape[0]
+#         neg_count = oth_data.shape[0]
+#
+#         print('pre-loop pos_data: %s' % str(pos_data.shape))
+#         print('pre-loop oth_data: %s' % str(oth_data.shape))
+#
+#         for i in range(pos_count):
+#             print('i: %d' % i)
+#             test_pos_data   = pos_data.iloc[i]
+#             test_pos_labels = pos_labels.iloc[i]
+#             print('test_pos_data:   %s' % str(test_pos_data.shape))
+#             print('test_pos_labels: %s' % str(test_pos_labels.shape))
+#             if i == 0:
+#                 train_pos_data   = pos_data.iloc[1:]
+#                 train_pos_labels = pos_labels.iloc[1:]
+#             elif i == pos_count - 1:
+#                 train_pos_data   = pos_data.iloc[:-1]
+#                 train_pos_labels = pos_labels.iloc[:-1]
+#             else:
+#                 train_pos_data   = pd.concat([pos_data.iloc[:i],   pos_data.iloc[i+1:]])
+#                 train_pos_labels = pd.concat([pos_labels.iloc[:i], pos_labels.iloc[i+1:]])
+#             print('train_pos_data:   %s' % str(train_pos_data.shape))
+#             print('train_pos_labels: %s' % str(train_pos_labels.shape))
+#             train_pos_data   = train_pos_data.sample(neg_count // 2, replace=True)
+#             train_pos_labels = train_pos_labels.sample(neg_count // 2, replace=True)
+#             training_data   = pd.concat([train_pos_data,   oth_data[:neg_count // 2]])
+#             training_labels = pd.concat([train_pos_labels, oth_labels[:neg_count // 2]])
+#             # test_data       = oth_data[neg_count // 2:].append(test_pos_data, ignore_index=True)  # pd.concat([test_pos_data,    oth_data[neg_count // 2:]])
+#             # test_labels     = oth_labels[neg_count // 2:].append(test_pos_labels, ignore_index=True)  # pd.concat([test_pos_labels,  oth_labels[neg_count // 2:]])
+#
+#             test_data       = oth_data[neg_count // 2:]
+#             test_labels     = oth_labels[neg_count // 2:]
+#             for j in range(10):
+#                 test_data = test_data.append(test_pos_data, ignore_index=True)  # pd.concat([test_pos_data,    oth_data[neg_count // 2:]])
+#                 test_labels = test_labels.append(test_pos_labels, ignore_index=True)  # pd.concat([test_pos_labels,  oth_labels[neg_count // 2:]])
+#
+#             # training_data   = pd.concat([pos_data[:pos_count // 2], oth_data[:neg_count // 2]])
+#             # training_labels = pd.concat([pos_labels[:pos_count // 2], oth_labels[:neg_count // 2]])
+#             # test_data       = pd.concat([pos_data[pos_count // 2:], oth_data[neg_count // 2:]])
+#             # test_labels     = pd.concat([pos_labels[pos_count // 2:], oth_labels[neg_count // 2:]])
+#
+#             print('test data shape:  %s' % str(test_data.shape))
+#             print('test label shape: %s' % str(test_labels.shape))
+#             print('train data shape:  %s' % str(training_data.shape))
+#             print('train label shape: %s' % str(training_labels.shape))
+#
+#             # We learn the digits on the first half of the digits
+#             classifier.fit(training_data, training_labels)
+#
+#             expected = test_labels  # pd.concat([pos_labels, oth_labels[neg_count // 2:]])
+#             predicted = classifier.predict(test_data)
+#
+#             print("Classification report for classifier %s:\n%s\n" % (
+#                 classifier, metrics.classification_report(expected, predicted)
+#             ))
+#             # print('F1-score:%s' % metrics.f1_score(expected, predicted.ravel()))
+#             print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
+#
+#     train_classifier(classifier, pos_data, pos_labels, oth_data, oth_labels)
+#
+#     return classifier
 
 
 
@@ -436,6 +570,8 @@ RANDOMISED = 0
 
 if __name__ == '__main__':
 
+    print('START:', tsver())
+
     options = Options()
     opts = options.parse(sys.argv[1:])
 
@@ -455,7 +591,7 @@ if __name__ == '__main__':
     def mkfn(classifier):
         return '%s-%s-%s.joblib' % (file_prefix, classifier, VER)
 
-    # COORDINATED = 1, RANDOMISED = 0
+    print('COORDINATED = 1, RANDOMISED = 0')
     pos_data = load_training_data(opts.pos_training_file, True)
     pos_data.drop('Label', axis=1, inplace=True)
     oth_data = load_training_data(opts.other_training_file)
@@ -498,7 +634,7 @@ if __name__ == '__main__':
         )
         # sys.exit()
 
-    svc  = classify_with_svc(pos_data, pos_labels, oth_data, oth_labels)
+    svc = classify_with_svc3(pos_data, pos_labels, oth_data, oth_labels)
     svc_file = mkfn('svc')
     if not dry_run:
         dump(svc, svc_file)
@@ -510,7 +646,7 @@ if __name__ == '__main__':
     #     dump(svc2, svc2_file)
     #     print('Wrote SVM classifier to %s' % svc2_file)
 
-    rfc = classify_with_rfc(pos_data, pos_labels, oth_data, oth_labels)
+    rfc = classify_with_rfc2(pos_data, pos_labels, oth_data, oth_labels)
     rfc_file = mkfn('rfc')
     if not dry_run:
         dump(rfc, rfc_file)
@@ -518,13 +654,16 @@ if __name__ == '__main__':
 
     hidden_size = int(len(pos_data) * 0.5)
 
-    (bc, results) = classify_with_bagging_pu(pos_data, pos_labels, oth_data, oth_labels, hidden_size, seed=1)
+    (bc, results) = classify_with_bagging_pu2(pos_data, pos_labels, oth_data, oth_labels, hidden_size, seed=1)
     # (bc, results) = classify_with_bagging_pu(pos_data.sample(len(oth_data), replace=True), pos_labels.sample(len(oth_data), replace=True), oth_data, oth_labels, hidden_size, seed=1)
 
-    bpu_comparison_chart_fn = '%s-bpu-comparison-%s.png' % (file_prefix, VER)
-    plot_bagging_pu_results(results, hidden_size, int_mode, bpu_comparison_chart_fn)
+    if results:
+        bpu_comparison_chart_fn = '%s-bpu-comparison-%s.png' % (file_prefix, VER)
+        plot_bagging_pu_results(results, hidden_size, int_mode, bpu_comparison_chart_fn)
 
     bc_file = mkfn('bpu')
     if not dry_run:
         dump(bc, bc_file)
         print('Wrote classifier to %s' % bc_file)
+
+    print('DONE:', tsver())
