@@ -17,8 +17,11 @@ from utils import epoch_seconds_2_timestamp_str, eprint, flatten, timestamp_2_ep
 # from utils import epoch_seconds_2_timestamp_str, eprint, expanded_urls_from, flatten, lowered_hashtags_from, mentioned_ids_from, text_from, timestamp_2_epoch_seconds
 
 
-# Extracts feature vectors from tweets in the Twitter IRA dataset (CSV files)
-
+# Extracts feature vectors from tweets in the Twitter IRA dataset (CSV files),
+# building feature vectors for HCC members and their groupings as input to the
+# classifiers for validation
+#
+# This version extracts 32 features
 
 class Options():  # DefaultOptions):
     def __init__(self):

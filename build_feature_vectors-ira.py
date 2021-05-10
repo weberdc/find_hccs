@@ -15,7 +15,8 @@ from networkx.algorithms.cluster import clustering
 
 # Builds feature vectors for HCC members and their groupings as input to the
 # classifiers for validation -- specific to the IRA dataset
-
+#
+# This version extracts 23 features
 class Options:
     def __init__(self):
         self._init_parser()

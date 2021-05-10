@@ -85,16 +85,22 @@ class Options:
             help='The file of real data to test (expected to be positive, class 1).'
         )
         self.parser.add_argument(
-            '-o1', '--output1',
+            '-o1', '--hist-plot-file',
             required=True,
-            dest='out_file1',
+            dest='hist_plot_file',
             help='The file to which to write the prediction histogram.'
         )
         self.parser.add_argument(
-            '-o2', '--output2',
+            '-o2', '--roc-plot-file',
             required=True,
-            dest='out_file2',
+            dest='roc_plot_file',
             help='The file to which to write the ROC curve plot.'
+        )
+        self.parser.add_argument(
+            '-o3', '--pca-plot-file',
+            default=None,
+            dest='pca_plot_file',
+            help='The file to which to write the PCA plot to.'
         )
         self.parser.add_argument(
             '--roc-label',
@@ -107,7 +113,7 @@ class Options:
         return self.parser.parse_args(args)
 
 
-def load_training_data(csv_file, first=False):
+def load_test_data(csv_file, first=False):
     # categories = CategoricalDtype(['COORDINATED','RANDOMISED'], ordered=True)
     return pd.read_csv(csv_file, comment='#')  #dtype={'Label':categories}, comment='#')
 
@@ -173,6 +179,46 @@ def plot_ROC_curve(label, model, expected_labels, test_data, interactive_mode, o
         plt.show()
 
 
+def plot_pca(pos_data, pos_labels, oth_data, oth_labels, class_labels, pca_fn):
+    def plot_2d_space(X, y, label='Classes'):
+        plt.clf()
+        colors = ['#1F77B4', '#FF7F0E']
+        markers = ['o', 's']
+        for l, c, m in zip(np.unique(y), colors, markers):
+            plt.scatter(
+                X[y==l, 0],
+                X[y==l, 1],
+                c=c, label=l, marker=m
+            )
+        if label: plt.title(label)
+        plt.gcf().set_size_inches(4, 4)
+        plt.legend(class_labels, loc='upper left')
+        plt.gca().xaxis.set_visible(False)
+        plt.gca().yaxis.set_visible(False)
+        plt.tight_layout()
+        if not DRY_RUN:
+            print(f'Writing PCA plot to {pca_fn}')
+            plt.savefig(pca_fn)
+        plt.show()
+
+    from sklearn.decomposition import PCA
+
+    X = pd.concat([pos_data, oth_data], axis=0, ignore_index=True)
+    y = pd.concat([pos_labels, oth_labels])['Label']
+
+    # https://stackoverflow.com/a/26415620
+    # from sklearn import preprocessing
+    #
+    # x = X.values #returns a numpy array
+    # min_max_scaler = preprocessing.MinMaxScaler()
+    # x_scaled = min_max_scaler.fit_transform(x)
+    # X = pd.DataFrame(x_scaled)
+
+    pca = PCA(n_components=2)
+    X = pca.fit_transform(X)
+
+    plot_2d_space(X, y, None)
+
 
 DEBUG=False
 def log(msg):
@@ -195,18 +241,22 @@ if __name__ == '__main__':
     neg_test_file    = opts.neg_test_file
     exp_pos_file     = opts.exp_pos_file
     cls_file         = opts.classifier_file
-    out_file1        = opts.out_file1
-    out_file2        = opts.out_file2
+    hist_plot_file   = opts.hist_plot_file
+    roc_plot_file    = opts.roc_plot_file
     interactive_mode = opts.interactive_mode
     roc_label        = opts.roc_label
     upsample         = opts.upsample
     standardise      = opts.standardise
+    pca_plot_file    = opts.pca_plot_file
 
     # COORDINATED = 1, RANDOMISED = 0
-    oth_data = load_training_data(neg_test_file)
-    oth_data.drop('Label', axis=1, inplace=True)
-    exp_pos_data = load_training_data(exp_pos_file)
+    class_labels = ['UNLABELED', 'COORDINATING']
+    # expected positive data
+    exp_pos_data = load_test_data(exp_pos_file)
     exp_pos_data.drop('Label', axis=1, inplace=True)
+    # non-positive data for comparison
+    oth_data = load_test_data(neg_test_file)
+    oth_data.drop('Label', axis=1, inplace=True)
 
     if standardise:
         from sklearn.preprocessing import StandardScaler
@@ -233,13 +283,23 @@ if __name__ == '__main__':
     real_test_data   = pd.concat([exp_pos_data.sample(sample_size, replace=True), oth_data.sample(sample_size, replace=True)])
     real_test_labels = pd.concat([exp_pos_labels.sample(sample_size, replace=True), oth_labels.sample(sample_size, replace=True)], sort=False)
 
+    # real_test_data.fillna(0, inplace=True)
+
+    if pca_plot_file:
+        plot_pca(
+            real_test_data[:sample_size], real_test_labels[:sample_size],
+            real_test_data[sample_size:], real_test_labels[sample_size:],
+            class_labels, pca_plot_file
+        )
+
     predictions = classifier.predict(real_test_data)
 
     print('real test data   %s' % str(real_test_data.shape))
     print('real test labels %s' % str(real_test_labels.shape))
 
     print("Classification report for classifier %s:\n%s\n" % (
-        classifier, metrics.classification_report(real_test_labels, predictions)
+        classifier,
+        metrics.classification_report(real_test_labels, predictions, target_names=class_labels)
     ))
     print("Confusion matrix:\n%s" % metrics.confusion_matrix(real_test_labels, predictions))
 
@@ -258,7 +318,11 @@ if __name__ == '__main__':
         predicted_probabilities[:,1][:len(exp_pos_data)],
         predicted_probabilities[:,1][len(exp_pos_data):],
         interactive_mode,
-        out_file1
+        hist_plot_file
     )
 
-    plot_ROC_curve(roc_label, classifier, real_test_labels, real_test_data, interactive_mode, out_file2)
+    plot_ROC_curve(
+        roc_label, classifier,
+        real_test_labels, real_test_data,
+        interactive_mode, roc_plot_file
+    )

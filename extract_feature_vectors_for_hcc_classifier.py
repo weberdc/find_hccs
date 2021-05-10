@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 
 import csv
+import gzip
 import json
 import networkx as nx
 import sys
 import time
+import utils
 
 from argparse import ArgumentParser
 from calculate_activity_network import embedded_extended_tweet_url, root_of_conversation
 from collections import defaultdict
 from datetime import datetime
-from twitter_utils import parse_twitter_ts
-from utils import epoch_seconds_2_timestamp_str, eprint, expanded_urls_from, flatten, lowered_hashtags_from, mentioned_ids_from, text_from, timestamp_2_epoch_seconds
-# from utils import DATA_DIR, eprint, expanded_urls_from, extract_filename, fetch_lines, lowered_hashtags_from, mentioned_ids_from, text_from, timestamp_2_epoch_seconds
+from utils import eprint, expanded_urls_from, extract_text, flatten, lowered_hashtags_from, mentioned_ids_from#, timestamp_2_epoch_seconds
 
 
-class Options():  # DefaultOptions):
+# Builds feature vectors for HCC members and their groupings as input to the
+# classifiers for validation
+#
+# This version extracts 32 features
+
+
+class Options():
     def __init__(self):
         self._init_parser()
 
@@ -60,6 +66,24 @@ def parse_ts(ts_str):
 
 
 def count(fltr): return len(list(fltr))
+
+
+def root_of_conversation(tweet_in_conversation, tweet_map):
+    """Finds the root of the conversation that the provided tweet is in"""
+    root_id = tweet_in_conversation
+    # go until we reply outside of the corpus, or the current tweet isn't a reply
+    while root_id in tweet_map and 'in_reply_to_status_id_str' in tweet_map[root_id] and tweet_map[root_id]['in_reply_to_status_id_str']:
+        root_id = tweet_map[root_id]['in_reply_to_status_id_str']
+    return root_id
+
+
+def embedded_extended_tweet_url(tweet_id, url):
+    # extended tweets, because their text field is not long enough for the
+    # content, they include an embedded url pointing to the full tweet
+    # Of course, this isn't the sort of URL we're interested in, so we can
+    # test for it so we can strip it out. This method identifies it.
+    return url == 'https://twitter.com/i/web/status/%s' % tweet_id
+
 
 
 USER_FEATURES = [
@@ -153,8 +177,8 @@ def mk_feature_str(keys, feature_map):
 
 
 def build_activity_graph(tweets, t_0):  # tweets is a tweet map { tweet_id : tweet }
-    first_tweet_ts_str = epoch_seconds_2_timestamp_str(t_0)
-    first_tweet_ts = parse_twitter_ts(first_tweet_ts_str)
+    first_tweet_ts_str = utils.ts_to_str(t_0, fmt=utils.TWITTER_TS_FORMAT)  # epoch_seconds_2_timestamp_str(t_0)
+    first_tweet_ts = utils.epoch_seconds_2_ts(t_0)  #first_tweet_ts_str)  # parse_twitter_ts(first_tweet_ts_str)
     g = nx.MultiDiGraph(post_count=len(tweets))
 
     def add_node(g, n_id, n_type='USER', is_author=False):
@@ -174,7 +198,7 @@ def build_activity_graph(tweets, t_0):  # tweets is a tweet map { tweet_id : twe
         add_node(g, from_id, 'USER', True)
         # g.nodes[from_id]['is_author'] = True
         add_node(g, to_id, n_type=node_type_for(int_type))
-        t = timestamp_2_epoch_seconds(parse_twitter_ts(ts_str)) - t_0
+        t = utils.extract_ts_s(ts_str) - t_0  # timestamp_2_epoch_seconds(utils.extract_ts_s(ts_str)) - t_0
         attrs = {
             'time_t' : t,
             'tweet_id' : tweet_id,
@@ -191,7 +215,7 @@ def build_activity_graph(tweets, t_0):  # tweets is a tweet map { tweet_id : twe
         hashtags = lowered_hashtags_from(tweet)
         urls = expanded_urls_from(tweet)
         mentions = mentioned_ids_from(tweet)
-        tweet_text = text_from(tweet)
+        tweet_text = extract_text(tweet)
         tweet_ts = tweet['created_at']
         tweet_id = tweet['id_str']
         tweeter_id = tweet['user']['id_str']
@@ -215,9 +239,9 @@ def build_activity_graph(tweets, t_0):  # tweets is a tweet map { tweet_id : twe
                 original_tweet_id=tweet['retweeted_status']['id_str'],
                 original_tweet_ts=tweet['retweeted_status']['created_at'],
                 posting_delay_sec=(
-                    parse_twitter_ts(tweet['retweeted_status']['created_at']) -
-                    parse_twitter_ts(tweet_ts)
-                ).total_seconds()
+                    utils.extract_ts_s(tweet['retweeted_status']['created_at']) -
+                    utils.extract_ts_s(tweet_ts)
+                )#.total_seconds()
             )
         elif 'quoted_status' in tweet and 'retweeted_status' not in tweet:
             quoter = tweeter_id
@@ -228,9 +252,9 @@ def build_activity_graph(tweets, t_0):  # tweets is a tweet map { tweet_id : twe
                 original_tweet_id=tweet['quoted_status']['id_str'],
                 original_tweet_ts=tweet['quoted_status']['created_at'],
                 posting_delay_sec=(
-                    parse_twitter_ts(tweet['quoted_status']['created_at']) -
-                    parse_twitter_ts(tweet_ts)
-                ).total_seconds()
+                    utils.extract_ts_s(tweet['quoted_status']['created_at']) -
+                    utils.extract_ts_s(tweet_ts)
+                )#.total_seconds()
             )
         elif 'in_reply_to_status_id_str' in tweet and tweet['in_reply_to_status_id_str'] in tweets:
             # only consider replies that appear in the corpus
@@ -241,7 +265,7 @@ def build_activity_graph(tweets, t_0):  # tweets is a tweet map { tweet_id : twe
 
             replied_to_status = tweets[tweet['in_reply_to_status_id_str']]
             replied_to_status_ts = replied_to_status['created_at']
-            posting_delay_sec = (parse_twitter_ts(replied_to_status_ts) - parse_twitter_ts(tweet_ts)).total_seconds()
+            posting_delay_sec = (utils.extract_ts_s(replied_to_status_ts) - utils.extract_ts_s(tweet_ts))#.total_seconds()
             add_edge(
                 g, replier, replied_to, tweet_id, tweet_ts, 'REPLY',
                 original_tweet_id=tweet['in_reply_to_status_id_str'],
@@ -255,11 +279,11 @@ def build_activity_graph(tweets, t_0):  # tweets is a tweet map { tweet_id : twe
                 conversation_root = root_of_conversation(tweet['in_reply_to_status_id_str'], tweets)
                 # conversation_root MAY NOT be in the corpus - it's still a link though
                 conv_root_ts = first_tweet_ts_str
-                posting_delay_sec = (first_tweet_ts - parse_twitter_ts(tweet_ts)).total_seconds()
+                posting_delay_sec = (utils.ts_2_epoch_seconds(first_tweet_ts) - utils.extract_ts_s(tweet_ts))#.total_seconds()
                 if conversation_root in tweets:
                     observed_user_ids.add(tweets[conversation_root]['user']['id_str'])
                     conv_root_ts = tweets[conversation_root]['created_at']
-                    posting_delay_sec = (parse_twitter_ts(conv_root_ts) - parse_twitter_ts(tweet_ts)).total_seconds()
+                    posting_delay_sec = (utils.extract_ts_s(conv_root_ts) - utils.extract_ts_s(tweet_ts))#.total_seconds()
                 add_edge(
                     g, replier, conversation_root, tweet_id, tweet_ts, 'IN_CONVERSATION',
                     original_tweet_id=conversation_root,
@@ -296,16 +320,18 @@ if __name__ == '__main__':
     tweets = dict([(uid, []) for uid in users.keys()])
     earliest_ts = sys.maxsize
     latest_ts = 0
-    with open(opts.tweets_file, 'r', encoding='utf-8') as f:
-        for l in f:
-            tweet = json.loads(l.strip())
-            tweet['ts'] = timestamp_2_epoch_seconds(parse_ts(tweet['created_at']))
-            if tweet['ts'] < earliest_ts: earliest_ts = tweet['ts']
-            if tweet['ts'] > latest_ts:   latest_ts   = tweet['ts']
-            user_id = tweet['user']['id_str']
-            if user_id in users.keys():
-                # tweet['ts'] = timestamp_2_epoch_seconds(parse_ts(tweet['created_at']))
-                tweets[user_id].append(tweet)
+    # with open(opts.tweets_file, 'r', encoding='utf-8') as f:
+    f = gzip.open(opts.tweets_file, 'rt') if opts.tweets_file[-1] in 'zZ' else open(opts.tweets_file, 'r', encoding='utf-8')
+    for l in f:
+        tweet = json.loads(l.strip())
+        tweet['ts'] = utils.extract_ts_s(tweet['created_at']) # timestamp_2_epoch_seconds(parse_ts(tweet['created_at']))
+        if tweet['ts'] < earliest_ts: earliest_ts = tweet['ts']
+        if tweet['ts'] > latest_ts:   latest_ts   = tweet['ts']
+        user_id = tweet['user']['id_str']
+        if user_id in users.keys():
+            # tweet['ts'] = timestamp_2_epoch_seconds(parse_ts(tweet['created_at']))
+            tweets[user_id].append(tweet)
+    f.close()
     collection_period_mins = (latest_ts - earliest_ts) / 60
 
     user_feature_vectors = {}

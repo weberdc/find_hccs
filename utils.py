@@ -97,6 +97,11 @@ def is_reply(t):
     return 'in_reply_to_status_id_str' in t and t['in_reply_to_status_id_str'] != None
 
 
+def flatten(list_of_lists):
+    """Takes a list of lists and turns it into a list of the sub-elements"""
+    return [item for sublist in list_of_lists for item in sublist]
+
+
 # e.g. Tue Dec 31 06:15:21 +0000 2019
 # TWITTER_TS_FORMAT='%a %b %d %H:%M:%S +0000 %Y'
 TWITTER_TS_FORMAT='%a %b %d %H:%M:%S %z %Y' # BEWARE: Using %z here might screw up other code.
@@ -198,6 +203,15 @@ def mentions_from(tweet, include_retweet=False):
         m_entities += mentions_from(get_ot_from_rt(tweet))  #['retweeted_status'])
     return m_entities
     # return extract_mention_ids(m_entities)
+
+
+def mentioned_ids_from(tweet, desired_field='id_str'):
+    def extract_mention_ids(entities):
+        return [m[desired_field] for m in entities]
+    m_entities = tweet['entities']['user_mentions']
+    if 'extended_tweet' in tweet:
+        m_entities = tweet['extended_tweet']['entities']['user_mentions']
+    return extract_mention_ids(m_entities)
 
 
 def extract_domain(url, lower=False):

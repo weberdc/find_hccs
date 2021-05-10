@@ -33,6 +33,12 @@ class Options:
             help='Tweet corpus (JSON, one tweet per line)'
         )
         self.parser.add_argument(
+            '--exclude-ids-file',
+            default=None,
+            dest='exclude_ids_file',
+            help='IDs to exclude, one tweet per line)'
+        )
+        self.parser.add_argument(
             '-m', '--multiplier',
             dest='multiplier',
             type=int,
@@ -80,6 +86,7 @@ if __name__=='__main__':
 
     g_file    = opts.graphml_file
     multiples = opts.multiplier
+    exid_file = opts.exclude_ids_file
 
     STARTING_TIME = utils.now_str()
     log('Starting at %s\n' % STARTING_TIME)
@@ -120,6 +127,10 @@ if __name__=='__main__':
     taken_ids = [str(id) for n, id in in_g.nodes(data='label')]
     for id in taken_ids:
         ids.remove(id)
+    with open(exid_file, 'r', encoding='utf-8') as f:
+        for l in f:
+            if l.strip() in ids:
+                ids.remove(l.strip())
     ids = list(ids)
     log('Down to %d accounts' % len(ids))
 
@@ -128,7 +139,7 @@ if __name__=='__main__':
     log('Building random groups (x%d)' % multiples)
     line_count = 0
     for iteration in range(multiples):
-        for sub_g in nx.connected_component_subgraphs(in_g):
+        for sub_g in [in_g.subgraph(c) for c in nx.connected_components(in_g)]: #nx.connected_component_subgraphs(in_g):
             line_count = utils.log_row_count(line_count, DEBUG)
             c_id = '%s_%03d' % ([id for n, id in sub_g.nodes(data='community_id')][0], iteration)
             size = sub_g.number_of_nodes()

@@ -164,7 +164,7 @@ def pos_recall(model, X, y):
     fn = cm['fn']
 
     # props to https://en.wikipedia.org/wiki/Precision_and_recall
-    return tp / (tp + fn)
+    return tp / (tp + fn) if (tp + fn) > 0 else 0
 
 
 def pos_precision(model, X, y):
@@ -173,16 +173,16 @@ def pos_precision(model, X, y):
     fp = cm['fp']
 
     # props to https://en.wikipedia.org/wiki/Precision_and_recall
-    return tp / (tp + fp)
+    return tp / (tp + fp) if (tp + fp) > 0 else 0
 
 
-def pos_precision(model, X, y):
-    cm = calc_confusion_matrix(model, X, y)
-    tp = cm['tp']
-    fp = cm['fp']
-
-    # props to https://en.wikipedia.org/wiki/Precision_and_recall
-    return tp / (tp + fp)
+# def pos_precision(model, X, y):
+#     cm = calc_confusion_matrix(model, X, y)
+#     tp = cm['tp']
+#     fp = cm['fp']
+#
+#     # props to https://en.wikipedia.org/wiki/Precision_and_recall
+#     return tp / (tp + fp)
 
 
 def class_f1(model, X, y, label=COORDINATING):
