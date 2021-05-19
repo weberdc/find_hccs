@@ -19,6 +19,8 @@ from utils import eprint, expanded_urls_from, extract_text, flatten, lowered_has
 # classifiers for validation
 #
 # This version extracts 32 features
+#
+# Renamed from extract_feature_vectors_for_hcc_classifier.py
 
 
 class Options():

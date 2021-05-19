@@ -17,6 +17,9 @@ from networkx.algorithms.cluster import clustering
 # classifiers for validation -- specific to the IRA dataset
 #
 # This version extracts 23 features
+#
+# Renamed from build_feature_vectors-ira.py
+
 class Options:
     def __init__(self):
         self._init_parser()

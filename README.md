@@ -7,7 +7,7 @@ the following publications:
 
 - Weber, D. and Neumann, F. 2020. "Who's in the gang? Revealing coordinating communities on social media", _The 2020 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining_, _ASONAM 2020_, The Hague, Netherlands, 7-10 December, (accepted). ([arXiv:2010.08180](https://arxiv.org/abs/2010.08180))
 
-- Weber, D. and Neumann, F. 2021, "A General Method to Find Highly Coordinating Communities in Social Media through Inferred Interaction Links", _Journal of Social Network Analysis and Mining_, submitted. ([arXiv:2103.03409](https://arxiv.org/abs/2103.03409))
+- Weber, D. and Neumann, F. 2021, "Amplifying influence through coordinated behaviour in social networks", _Journal of Social Network Analysis and Mining_, submitted. ([arXiv:2103.03409](https://arxiv.org/abs/2103.03409))
 
 - Weber, D., Nasim, M., Falzon, L. and Mitchell, L. (2020) "#ArsonEmergency and Australia's 'Black
 Summer': Polarisation and misinformation on social media". Lecture Notes in Computer
@@ -113,7 +113,7 @@ A number of analyses and visualisations were prepared as part of the writing of 
 
 To build and use the machine learning classifier components, the following scripts are required, once HCCs have been detected:
 - `hcc_graphml_to_csv.py`: extracts the HCC groups into a simple CSV with two columns, so each row consists of a community ID unique within the GraphML file and the account ID of a node within the HCC.
-- `extract_feature_vectors_for_hcc_classifier(-ira).py`: using the HCC groupings, it builds the activity networks surrounding each HCC (i.e., the activity its members engage in, within the corpus) and then creates a feature vector for each member based on their profile details and also the details of the HCC (so each member's feature vector includes details of its HCC, which are duplicated amongst all the HCC's members).
+- `build_feature_vectors_{23,32}(-ira).py`: using the HCC groupings, builds the activity networks surrounding each HCC (i.e., the activity its members engage in, within the corpus) and then creates a feature vector for each member based on their profile details and also the details of the HCC (so each member's feature vector includes details of its HCC, which are duplicated amongst all the HCC's members). The 32 variant is the original set of features used in Weber & Neumann (2021, submitted), while the 23 variant is a new set that is being experimented with.
 - `train_hcc_classifier`: using positive feature vectors and non-positive feature vectors it trains a machine learning model to distinguish between the two using the SVM, RandomForest or Bagging Positive Unlabelled (BaggingPU) algorithm.
 - `test_hcc_classifier`: applies the trained classifier against the feature vectors extracted for other discovered HCCs. Includes writing out ROC and AUC charts, if required.
 

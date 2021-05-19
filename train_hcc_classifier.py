@@ -98,46 +98,46 @@ class Options:
         return self.parser.parse_args(args)
 
 
+# DATA FUNCTIONS
+
 def load_training_data(csv_file, first=False):
     return pd.read_csv(csv_file, comment='#')
 
 
-def classify_with_svc(pos_data, pos_labels, oth_data, oth_labels):
-    classifier = svm.SVC(gamma=0.001, probability=True)
-
-    pos_count = pos_data.shape[0]
-    neg_count = oth_data.shape[0]
-
-    training_data   = pd.concat([pos_data.iloc[::2], oth_data[:neg_count // 2]])
-    training_labels = pd.concat([pos_labels.iloc[::2], oth_labels[:neg_count // 2]])
-    test_data       = pd.concat([pos_data.iloc[1::2], oth_data[neg_count // 2:]])
-    test_labels     = pd.concat([pos_labels.iloc[1::2], oth_labels[neg_count // 2:]])
-    # training_data   = pd.concat([pos_data[:pos_count // 2], oth_data[:neg_count // 2]])
-    # training_labels = pd.concat([pos_labels[:pos_count // 2], oth_labels[:neg_count // 2]])
-    # test_data       = pd.concat([pos_data[pos_count // 2:], oth_data[neg_count // 2:]])
-    # test_labels     = pd.concat([pos_labels[pos_count // 2:], oth_labels[neg_count // 2:]])
-
-    print('test label shapes: %s' % str(test_labels.shape))
-
-    # We learn the digits on the first half of the digits
-    classifier.fit(training_data, training_labels)
-
-    expected = test_labels  # pd.concat([pos_labels, oth_labels[neg_count // 2:]])
-    predicted = classifier.predict(test_data)
-
-    print("Classification report for classifier %s:\n%s\n" % (
-        classifier, metrics.classification_report(expected, predicted)
-    ))
-    print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
-
-    return classifier
-
-
-COORDINATING = 1
-UNLABELED = 0
+# def classify_with_svc(pos_data, pos_labels, oth_data, oth_labels):
+#     classifier = svm.SVC(gamma=0.001, probability=True)
+#
+#     pos_count = pos_data.shape[0]
+#     neg_count = oth_data.shape[0]
+#
+#     training_data   = pd.concat([pos_data.iloc[::2], oth_data[:neg_count // 2]])
+#     training_labels = pd.concat([pos_labels.iloc[::2], oth_labels[:neg_count // 2]])
+#     test_data       = pd.concat([pos_data.iloc[1::2], oth_data[neg_count // 2:]])
+#     test_labels     = pd.concat([pos_labels.iloc[1::2], oth_labels[neg_count // 2:]])
+#     # training_data   = pd.concat([pos_data[:pos_count // 2], oth_data[:neg_count // 2]])
+#     # training_labels = pd.concat([pos_labels[:pos_count // 2], oth_labels[:neg_count // 2]])
+#     # test_data       = pd.concat([pos_data[pos_count // 2:], oth_data[neg_count // 2:]])
+#     # test_labels     = pd.concat([pos_labels[pos_count // 2:], oth_labels[neg_count // 2:]])
+#
+#     print('test label shapes: %s' % str(test_labels.shape))
+#
+#     # We learn the digits on the first half of the digits
+#     classifier.fit(training_data, training_labels)
+#
+#     expected = test_labels  # pd.concat([pos_labels, oth_labels[neg_count // 2:]])
+#     predicted = classifier.predict(test_data)
+#
+#     print("Classification report for classifier %s:\n%s\n" % (
+#         classifier, metrics.classification_report(expected, predicted)
+#     ))
+#     print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
+#
+#     return classifier
 
 
-def calc_confusion_matrix(model, X, y, positive=COORDINATING, unlabeled=UNLABELED):
+# CLASSIFICATION FUNCTIONS
+
+def calc_confusion_matrix(model, X, y, positive=COORDINATED, unlabeled=RANDOMISED):
     test_data, labels = X, y
     tp, tn, fp, fn = np.zeros(4)
 
@@ -176,16 +176,7 @@ def pos_precision(model, X, y):
     return tp / (tp + fp) if (tp + fp) > 0 else 0
 
 
-# def pos_precision(model, X, y):
-#     cm = calc_confusion_matrix(model, X, y)
-#     tp = cm['tp']
-#     fp = cm['fp']
-#
-#     # props to https://en.wikipedia.org/wiki/Precision_and_recall
-#     return tp / (tp + fp)
-
-
-def class_f1(model, X, y, label=COORDINATING):
+def class_f1(model, X, y, label=COORDINATED):
     test_data, labels = X, y
 
     return metrics.precision_recall_fscore_support(
@@ -194,11 +185,11 @@ def class_f1(model, X, y, label=COORDINATING):
 
 
 def pos_f1(model, X, y):
-    return class_f1(model, X, y, COORDINATING)
+    return class_f1(model, X, y, COORDINATED)
 
 
 def unl_f1(model, X, y):
-    return class_f1(model, X, y, UNLABELED)
+    return class_f1(model, X, y, RANDOMISED)
 
 
 def classify_with_svc3(pos_data, pos_labels, oth_data, oth_labels):
@@ -335,112 +326,114 @@ def classify_with(classifier, pos_data, pos_labels, oth_data, oth_labels):
 
 
 
-def classify_with_rfc(pos_data, pos_labels, oth_data, oth_labels):
-    classifier = RandomForestClassifier(
-        n_estimators = 1000,  # Use 1000 trees
-        n_jobs = -1           # Use all CPU cores
-    )
-    pos_count = pos_data.shape[0]
-    neg_count = oth_data.shape[0]
-
-    training_data   = pd.concat([pos_data.iloc[::2], oth_data[:neg_count // 2]])
-    training_labels = pd.concat([pos_labels.iloc[::2], oth_labels[:neg_count // 2]])
-    test_data       = pd.concat([pos_data.iloc[1::2], oth_data[neg_count // 2:]])
-    test_labels     = pd.concat([pos_labels.iloc[1::2], oth_labels[neg_count // 2:]])
-
-    print('test label shapes: %s' % str(test_labels.shape))
-
-    # We learn the digits on the first half of the digits
-    classifier.fit(training_data, training_labels)
-
-    expected = test_labels  # pd.concat([pos_labels, oth_labels[neg_count // 2:]])
-    predicted = classifier.predict(test_data)
-
-    print("Classification report for classifier %s:\n%s\n" % (
-        classifier, metrics.classification_report(expected, predicted)
-    ))
-    print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
-
-    return classifier
-
-
-def classify_with_bagging_pu(pos_data, pos_labels, oth_data, oth_labels, hidden_size, seed=None):
-
-    # inspired by https://roywright.me/2017/11/16/positive-unlabeled-learning/
-    X = pd.concat([pos_data, oth_data], sort=False)
-    y = pd.concat([pos_labels, oth_labels], ignore_index=True)
-    y = pd.Series([l for l in y['Label']])
-    print(y.shape)
-    # y = y.astype(int)  # convert 'COORDINATED' to 1 and 'RANDOMISED' to 0
-
-    # Check the contents of the set
-    print('%d data points and %d features' % (X.shape))
-    print('%d positive out of %d total' % (sum(y), len(y)))
-
-    # Keep the original targets safe for later
-    y_orig = y.copy()
-
-    # Unlabel a certain number of data points
-    y.loc[
-        np.random.choice(
-            y[y == 1].index,
-            replace = False,
-            size = hidden_size
-        )
-    ] = 0
-
-    # Check the new contents of the set
-    print('%d positive out of %d total' % (sum(y), len(y)))
-
-    # We'll use a generic random forest
-    rf = RandomForestClassifier(
-        random_state = seed,  # random number generator seed
-        n_estimators = 1000,  # Use 1000 trees
-        n_jobs = -1           # Use all CPU cores
-    )
-    rf.fit(X, y)
-
-    # We'll also add an SVC
-    svc = svm.SVC(
-        random_state = seed,  # random number generator seed
-        probability=True,     # so we can call predict_proba
-        kernel='poly',        # kernels include: rbf, sigmoid, linear, poly
-        gamma='scale'         # also 0.001
-    )  # gamma=0.001,
-    svc.fit(X, y)
-    # results['output_svc'] = svc.predict_proba(X)[:,1]
-
-    # Store the scores assigned by this approach
-    results = pd.DataFrame({
-        'truth'      : y_orig,   # The true labels
-        'label'      : y,        # The labels to be shown to models in experiment
-        'output_std' : rf.predict_proba(X)[:,1],   # The random forest's scores
-        'output_svc' : svc.predict_proba(X)[:,1]
-    }, columns = ['truth', 'label', 'output_std', 'output_svc'])
-
-    bc = BaggingClassifierPU(
-        DecisionTreeClassifier(),
-        random_state = seed,  # random number generator seed
-        n_estimators = 1000,  # 1000 trees as usual
-        max_samples = sum(y), # Balance the positives and unlabeled in each bag
-        n_jobs = -1           # Use all cores
-    )
-    bc.fit(X, y)
-    results['output_skb'] = bc.oob_decision_function_[:,1]
-
-    expected = y_orig #test_labels  # pd.concat([pos_labels, oth_labels[neg_count // 2:]])
-    predicted = results['output_skb']  # probabilities - classifier.predict(test_data)
-    # print(predicted)
-    predicted_labels = [(1 if p >= 0.5 else 0) for p in predicted]
-
-    print("Classification report for classifier %s:\n%s\n" % (
-        bc, metrics.classification_report(expected, predicted_labels)
-    ))
-    print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted_labels))
+# def classify_with_rfc(pos_data, pos_labels, oth_data, oth_labels):
+#     classifier = RandomForestClassifier(
+#         n_estimators = 1000,  # Use 1000 trees
+#         n_jobs = -1           # Use all CPU cores
+#     )
+#     pos_count = pos_data.shape[0]
+#     neg_count = oth_data.shape[0]
+#
+#     training_data   = pd.concat([pos_data.iloc[::2], oth_data[:neg_count // 2]])
+#     training_labels = pd.concat([pos_labels.iloc[::2], oth_labels[:neg_count // 2]])
+#     test_data       = pd.concat([pos_data.iloc[1::2], oth_data[neg_count // 2:]])
+#     test_labels     = pd.concat([pos_labels.iloc[1::2], oth_labels[neg_count // 2:]])
+#
+#     print('test label shapes: %s' % str(test_labels.shape))
+#
+#     # We learn the digits on the first half of the digits
+#     classifier.fit(training_data, training_labels)
+#
+#     expected = test_labels  # pd.concat([pos_labels, oth_labels[neg_count // 2:]])
+#     predicted = classifier.predict(test_data)
+#
+#     print("Classification report for classifier %s:\n%s\n" % (
+#         classifier, metrics.classification_report(expected, predicted)
+#     ))
+#     print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
+#
+#     return classifier
 
 
-    return (bc, results)
+# def classify_with_bagging_pu(pos_data, pos_labels, oth_data, oth_labels, hidden_size, seed=None):
+#
+#     # inspired by https://roywright.me/2017/11/16/positive-unlabeled-learning/
+#     X = pd.concat([pos_data, oth_data], sort=False)
+#     y = pd.concat([pos_labels, oth_labels], ignore_index=True)
+#     y = pd.Series([l for l in y['Label']])
+#     print(y.shape)
+#     # y = y.astype(int)  # convert 'COORDINATED' to 1 and 'RANDOMISED' to 0
+#
+#     # Check the contents of the set
+#     print('%d data points and %d features' % (X.shape))
+#     print('%d positive out of %d total' % (sum(y), len(y)))
+#
+#     # Keep the original targets safe for later
+#     y_orig = y.copy()
+#
+#     # Unlabel a certain number of data points
+#     y.loc[
+#         np.random.choice(
+#             y[y == 1].index,
+#             replace = False,
+#             size = hidden_size
+#         )
+#     ] = 0
+#
+#     # Check the new contents of the set
+#     print('%d positive out of %d total' % (sum(y), len(y)))
+#
+#     # We'll use a generic random forest
+#     rf = RandomForestClassifier(
+#         random_state = seed,  # random number generator seed
+#         n_estimators = 1000,  # Use 1000 trees
+#         n_jobs = -1           # Use all CPU cores
+#     )
+#     rf.fit(X, y)
+#
+#     # We'll also add an SVC
+#     svc = svm.SVC(
+#         random_state = seed,  # random number generator seed
+#         probability=True,     # so we can call predict_proba
+#         kernel='poly',        # kernels include: rbf, sigmoid, linear, poly
+#         gamma='scale'         # also 0.001
+#     )  # gamma=0.001,
+#     svc.fit(X, y)
+#     # results['output_svc'] = svc.predict_proba(X)[:,1]
+#
+#     # Store the scores assigned by this approach
+#     results = pd.DataFrame({
+#         'truth'      : y_orig,   # The true labels
+#         'label'      : y,        # The labels to be shown to models in experiment
+#         'output_std' : rf.predict_proba(X)[:,1],   # The random forest's scores
+#         'output_svc' : svc.predict_proba(X)[:,1]
+#     }, columns = ['truth', 'label', 'output_std', 'output_svc'])
+#
+#     bc = BaggingClassifierPU(
+#         DecisionTreeClassifier(),
+#         random_state = seed,  # random number generator seed
+#         n_estimators = 1000,  # 1000 trees as usual
+#         max_samples = sum(y), # Balance the positives and unlabeled in each bag
+#         n_jobs = -1           # Use all cores
+#     )
+#     bc.fit(X, y)
+#     results['output_skb'] = bc.oob_decision_function_[:,1]
+#
+#     expected = y_orig #test_labels  # pd.concat([pos_labels, oth_labels[neg_count // 2:]])
+#     predicted = results['output_skb']  # probabilities - classifier.predict(test_data)
+#     # print(predicted)
+#     predicted_labels = [(1 if p >= 0.5 else 0) for p in predicted]
+#
+#     print("Classification report for classifier %s:\n%s\n" % (
+#         bc, metrics.classification_report(expected, predicted_labels)
+#     ))
+#     print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted_labels))
+#
+#
+#     return (bc, results)
 
+
+# VISUALISATION FUNCTIONS
 
 def plot_bagging_pu_results(results, hidden_size, interactive_mode, filepath):
     # For each data point, calculate the average score from the three approaches
