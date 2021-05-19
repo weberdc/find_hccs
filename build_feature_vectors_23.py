@@ -16,6 +16,8 @@ from networkx.algorithms.cluster import clustering
 # classifiers for validation
 #
 # This version extracts 23 features
+#
+# Renamed from build_feature_vectors.py
 
 class Options:
     def __init__(self):

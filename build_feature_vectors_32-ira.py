@@ -22,6 +22,8 @@ from utils import epoch_seconds_2_timestamp_str, eprint, flatten, timestamp_2_ep
 # classifiers for validation
 #
 # This version extracts 32 features
+#
+# Renamed from extract_feature_vectors_for_hcc_classifier-ira.py
 
 class Options():  # DefaultOptions):
     def __init__(self):
