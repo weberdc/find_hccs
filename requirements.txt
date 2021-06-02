@@ -91,7 +91,7 @@ tqdm @ file:///tmp/build/80754af9/tqdm_1611857934208/work
 traitlets==4.3.3
 twarc==1.12.1
 tweepy==3.9.0
-urllib3==1.25.11
+urllib3==1.26.5
 wcwidth @ file:///tmp/build/80754af9/wcwidth_1593447189090/work
 webencodings==0.5.1
 widgetsnbextension==3.5.1
