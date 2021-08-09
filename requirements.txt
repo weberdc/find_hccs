@@ -67,7 +67,7 @@ pytest==6.2.1
 python-dateutil==2.8.1
 python-louvain @ file:///tmp/build/80754af9/python-louvain_1595269350290/work
 pytz==2020.1
-pywin32==227
+pywin32==301
 pywinpty==0.5.7
 pyzmq==19.0.2
 qtconsole @ file:///tmp/build/80754af9/qtconsole_1600870028330/work
