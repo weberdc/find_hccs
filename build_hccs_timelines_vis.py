@@ -206,7 +206,7 @@ def process_data_and_plot(hcc_infos, merged_hccs_label, freq, which, ax, batch_m
             legend=False,
             lw=1,
             ax=ax,
-            ylabel='Tweets / week (log)',
+            ylabel=f'Tweets / {freq} (log)',
             xlabel=f'{len(hcc_info["tweets"]):,} tweets over {months:,.1f} months by {len(series.keys() - set(["All", "day_index"])):,} accounts'
         )
 
@@ -216,35 +216,35 @@ def process_data_and_plot(hcc_infos, merged_hccs_label, freq, which, ax, batch_m
 
         if not batch_mode:
             plt.show()
-        print('exiting early...')
-        sys.exit(1)
+        # print('exiting early...')
+        # sys.exit(1)
 
-        # grouped_tweets[c_id] = tweets_grouped
-        grouped_tweets = tweets_grouped
+        # # grouped_tweets[c_id] = tweets_grouped
+        # grouped_tweets = tweets_grouped
+        #
+        # # not all HCCs will have tweeted in every window
+        # # if min_ts: min_ts = min(min_ts, min(tweets_grouped.size().index))
+        # # else:      min_ts = min(tweets_grouped.size().index)
+        # # if max_ts: max_ts = max(max_ts, max(tweets_grouped.size().index))
+        # # else:      max_ts = max(tweets_grouped.size().index)
+        # min_ts = min([p[0] for p in series_i])
+        # max_ts = max([p[0] for p in series_i])
+        # print(min_ts)
+        # print(max_ts)
 
-        # not all HCCs will have tweeted in every window
-        # if min_ts: min_ts = min(min_ts, min(tweets_grouped.size().index))
-        # else:      min_ts = min(tweets_grouped.size().index)
-        # if max_ts: max_ts = max(max_ts, max(tweets_grouped.size().index))
-        # else:      max_ts = max(tweets_grouped.size().index)
-        min_ts = min([p[0] for p in series_i])
-        max_ts = max([p[0] for p in series_i])
-        print(min_ts)
-        print(max_ts)
-
-    full_ts_index = pd.date_range(min_ts, max_ts, freq=freq)
-
-    i = 0
-    for c_id in grouped_tweets:
-        tweets_grouped = c_id # grouped_tweets[c_id]
-        tweets_per_w = len(tweets_grouped)#.size()
-
-        # fill in empty windows with zeros
-        tweets_per_w = tweets_per_w.reindex(index=full_ts_index, fill_value=0)
-        tweets_per_w.name = merged_labels[i] if len(merged_labels) > i else 'Account %d' % c_id
-        i += 1
-
-        tweets_per_w_list.append(tweets_per_w)
+    # full_ts_index = pd.date_range(min_ts, max_ts, freq=freq)
+    #
+    # i = 0
+    # for c_id in grouped_tweets:
+    #     tweets_grouped = c_id # grouped_tweets[c_id]
+    #     tweets_per_w = len(tweets_grouped)#.size()
+    #
+    #     # fill in empty windows with zeros
+    #     tweets_per_w = tweets_per_w.reindex(index=full_ts_index, fill_value=0)
+    #     tweets_per_w.name = merged_labels[i] if len(merged_labels) > i else 'Account %d' % c_id
+    #     i += 1
+    #
+    #     tweets_per_w_list.append(tweets_per_w)
 
     # if not opts.merge:
     #     log('Plotting the series')
@@ -260,7 +260,7 @@ def process_data_and_plot(hcc_infos, merged_hccs_label, freq, which, ax, batch_m
     #     log('Plotting the result')
     #     plt.plot(average_series, label=merged_hccs_label)
 
-    return full_ts_index
+    # return full_ts_index
 
 
 
@@ -307,36 +307,38 @@ if __name__=='__main__':
     i = 0
     min_ts = None
     max_ts = None
-    for hccs_file in hcc_infos:  # accept only one file
-        hccs_label = merged_labels[i] if i < len(merged_labels) else 'Series %d' % (i+1)
-        ts_index = process_data_and_plot(
-            hcc_infos[hccs_file], hccs_label, freq, which_hcc, ax, batch_mode, dry_run
-        )
-        min_ts = ts_index[0] if not min_ts else min(min_ts, ts_index[0])
-        max_ts = ts_index[-1] if not max_ts else max(max_ts, ts_index[-1])
-        i += 1
-
-    # overall timestamp range for x labels
-    ts_index = pd.date_range(min_ts, max_ts, freq=freq)
-    # plt.xticks(ts_index, map(lambda ts: ts.strftime('%Y%m%d'), ts_index))
-
-    fig.autofmt_xdate()
-    # ax.set_xlim(left=0)
-
-    plt.ylabel('Tweets')
-    if log_y:
-        plt.yscale('log')
-    if x_label:
-        plt.xlabel(x_label)
-    if opts.incl_legend:
-        plt.legend(loc='best')
-
-    if not dry_run:
-        log('Writing to %s' % img_file)
-        plt.savefig(img_file, bbox_inches='tight', pad_inches=0)
-
-    log('displaying plot')
-    plt.show()
+    hccs_file = list(hcc_infos.keys())[0]
+    # for hccs_file in hcc_infos:  # accept only one file
+    hccs_label = merged_labels[i] if i < len(merged_labels) else 'Series %d' % (i+1)
+    # ts_index =
+    process_data_and_plot(
+        hcc_infos[hccs_file], hccs_label, freq, which_hcc, ax, batch_mode, dry_run
+    )
+    #     min_ts = ts_index[0] if not min_ts else min(min_ts, ts_index[0])
+    #     max_ts = ts_index[-1] if not max_ts else max(max_ts, ts_index[-1])
+    #     i += 1
+    #
+    # # overall timestamp range for x labels
+    # ts_index = pd.date_range(min_ts, max_ts, freq=freq)
+    # # plt.xticks(ts_index, map(lambda ts: ts.strftime('%Y%m%d'), ts_index))
+    #
+    # fig.autofmt_xdate()
+    # # ax.set_xlim(left=0)
+    #
+    # plt.ylabel('Tweets')
+    # if log_y:
+    #     plt.yscale('log')
+    # if x_label:
+    #     plt.xlabel(x_label)
+    # if opts.incl_legend:
+    #     plt.legend(loc='best')
+    #
+    # if not dry_run:
+    #     log('Writing to %s' % img_file)
+    #     plt.savefig(img_file, bbox_inches='tight', pad_inches=0)
+    #
+    # log('displaying plot')
+    # plt.show()
 
     log('Having started at %s,' % STARTING_TIME)
     log('now ending at     %s' % utils.now_str())
