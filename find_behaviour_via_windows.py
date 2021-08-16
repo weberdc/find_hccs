@@ -162,7 +162,7 @@ if __name__=='__main__':
     log_file = net_log_utils.open_log_file(lcn_dir)
 
     STARTING_TIME = utils.now_str()
-    log('Starting at %s' % STARTING_TIME)
+    print('Starting at %s' % STARTING_TIME)
 
     log('start_ts: %s' % utils.ts_to_str(start_ts_s))
     log('end_ts:   %s' % utils.ts_to_str(end_ts_s))
@@ -180,11 +180,11 @@ if __name__=='__main__':
             # if not start_ts_s: start_ts_s = ts
             if not current_window_ts_s: current_window_ts_s = ts
 
-            if ts < start_ts_s:
+            if start_ts_s and ts < start_ts_s:
                 # too early
                 continue
 
-            if ts > end_ts_s:
+            if end_ts_s and ts > end_ts_s:
                 log('Beyond the veil...')
                 if batch:
                     # g = process_batch(detector, batch, lcn_dir, current_window_ts_s, opts.matching_field, opts.window_str, dry_run)
@@ -212,7 +212,7 @@ if __name__=='__main__':
                     current_window_ts_s += window_s
                     net_log_utils.log_g(current_window_ts_s, None, 0, log_file, dry_run)
 
-                if ts <= end_ts_s:
+                if end_ts_s and ts <= end_ts_s:
                     # log('Starting next window...')
                     batch.append(tweet_row)
                 else:
@@ -227,4 +227,4 @@ if __name__=='__main__':
 
     log('Wrote log to %s' % log_file)
     log('Having started at %s,' % STARTING_TIME)
-    log('now ending at     %s' % utils.now_str())
+    print('now ending at     %s' % utils.now_str())
