@@ -239,7 +239,8 @@ def extract_text(tweet):
             #eprint('#%s' % t['id_str'])
             return t['extended_tweet']['full_text']
         else:
-            return t['text'] if 'text' in t else t['full_text']
+            # return t['text'] if 'text' in t else t['full_text']
+            return t['full_text'] if 'full_text' in t else t['text']
 
     if 'retweeted_status' in tweet:
         rt = tweet['retweeted_status']
