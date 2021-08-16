@@ -51,7 +51,10 @@ def link_to_reason(g, n, r):
         g.add_edge(n, r, weight=1.0, reason_weight=1.0, _edge_type='REASON')
     else:
         g[n][r]['weight'] += 1.0
-        g[n][r]['reason_weight'] += 1.0
+        if 'reason_weight' not in g[n][r]:
+            g[n][r]['reason_weight'] = 1.0
+        else:
+            g[n][r]['reason_weight'] += 1.0
 
 
 DEBUG=False
@@ -85,6 +88,7 @@ if __name__=='__main__':
 
     for u, v, r in to_add:
         if r not in g: add_reason_node(g, r)
+        else: g.nodes[r]['_node_type'] = 'REASON'
             # g.add_node(r, label=r, _node_type='REASON')
         link_to_reason(g, u, r)
         link_to_reason(g, v, r)
