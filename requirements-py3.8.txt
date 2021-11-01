@@ -60,7 +60,7 @@ pyrsistent @ file:///C:/ci/pyrsistent_1600141795814/work
 python-dateutil==2.8.1
 python-louvain @ file:///tmp/build/80754af9/python-louvain_1595269350290/work
 pytz==2020.1
-pywin32==227
+pywin32>=301
 pywinpty==0.5.7
 pyzmq==19.0.2
 qtconsole @ file:///tmp/build/80754af9/qtconsole_1600870028330/work
@@ -80,7 +80,7 @@ threadpoolctl @ file:///tmp/tmp9twdgx9k/threadpoolctl-2.1.0-py3-none-any.whl
 tornado==6.0.4
 traitlets==4.3.3
 tweepy==3.9.0
-urllib3==1.25.11
+urllib3>=1.26.5
 wcwidth @ file:///tmp/build/80754af9/wcwidth_1593447189090/work
 webencodings==0.5.1
 widgetsnbextension==3.5.1
