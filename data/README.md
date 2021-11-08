@@ -48,6 +48,8 @@ This study examined the activites and content of two pairs of polarised groups (
 - `ssm-election-tweet_ids.txt.gz`: The activities of the \#VoteYes and \#VoteNo accounts in the three weeks leading up to and just past the Australian federal election in May 2019.
 - `afl-rapid-20190322_25-tweet_ids.txt.gz`: A 72 hour collection of discussion surrounding the Australian Football League (AFL) sports competition (keyword: 'afl').
 
+Lists of partisan hashtags are in the `echo_chambers_partisan_hashtags` folder.
+
 These datasets were used in the following publications:
 
 - Mehwish Nasim, Derek Weber, Tobin South, Jonathan Tuke, Nigel Bean, Lucia Falzon and Lewis Mitchell (in preparation), "A longitudinal study of the echo chamber effect in the Australian Twittersphere".
