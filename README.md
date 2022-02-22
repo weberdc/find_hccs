@@ -5,19 +5,22 @@ _Finding sets of accounts that appear to coordinate their behaviour in social me
 This project provides a pipeline of processing steps to uncover _highly coordinating communities_ (HCCs) within _latent coordination networks_ (LCNs) built through inferring connects between social media actors based on their behaviour. It also provides a number of supporting scripts and analysis tools for evaluating the pipeline's performance, plus datasets on which it has been tested for
 the following publications:
 
-- Weber, D. and Neumann, F. 2020. "Who's in the gang? Revealing coordinating communities on social media", _The 2020 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining_, _ASONAM 2020_, The Hague, Netherlands, 7-10 December, (accepted). ([arXiv:2010.08180](https://arxiv.org/abs/2010.08180))
+- Weber, D. and Neumann, F. 2020. "Who's in the gang? Revealing coordinating communities on social media", _The 2020 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining_, _ASONAM 2020_, The Hague, Netherlands, 7-10 December, pp. 89--93. DOI: [10.1109/asonam49781.2020.9381418](https://doi.org/10.1109/asonam49781.2020.9381418) ([arXiv:2010.08180](https://arxiv.org/abs/2010.08180))
 
-- Weber, D. and Neumann, F. 2021, "Amplifying influence through coordinated behaviour in social networks", _Journal of Social Network Analysis and Mining_, submitted. ([arXiv:2103.03409](https://arxiv.org/abs/2103.03409))
+- Weber, D. and Neumann, F. 2021, "Amplifying influence through coordinated behaviour in social networks", _Journal of Social Network Analysis and Mining_, 11.1,
+pp. 111:1–111:42. DOI: [10.1007/s13278-021-00815-2](https://doi.org/10.1007/s13278-021-00815-2). ([arXiv:2103.03409](https://arxiv.org/abs/2103.03409))
 
 - Weber, D., Nasim, M., Falzon, L. and Mitchell, L. (2020) "#ArsonEmergency and Australia's 'Black
 Summer': Polarisation and misinformation on social media". Lecture Notes in Computer
-Science pp 159–173, DOI 10.1007/978-3-030-61841-4 11, ([arXiv:2004.00742](https://arxiv.org/abs/2004.00742))
+Science pp. 159–173, DOI: [10.1007/978-3-030-61841-4_11](https://doi.org/10.1007/978-3-030-61841-4_11), ([arXiv:2004.00742](https://arxiv.org/abs/2004.00742))
 
 - Weber, D. 2019. "On Coordinated Online Behaviour", Poster presented at _The Fourth Annual Australian Social Network Analysis Conference 2019_, _ASNAC 2019_, Adelaide, South Australia, 28-29 November. Available [here](https://www2.slideshare.net/derekweber/on-coordinated-online-behaviour).
 
-- Weber, D., Nasim, M., Falzon, L. and Mitchell, L. 2020. "Revealing social bot communities through coordinated behaviour during the 2020 US Democratic and Republican National Conventions", Talk presented at _The Fifth Annual Australian Social Network Analysis Conference 2020_, _ASNAC 2020_, Perth, Western Australia, 26-27 November. Available [here](https://www.slideshare.net/derekweber/revealing-social-bot-communities-through-coordinated-behaviour).
+- Weber, D., Nasim, M., Falzon, L. and Mitchell, L. (2020). "Revealing social bot communities through coordinated behaviour during the 2020 US Democratic and Republican National Conventions", Talk presented at _The Fifth Annual Australian Social Network Analysis Conference 2020_, _ASNAC 2020_, Perth, Western Australia, 26-27 November. Available [here](https://www.slideshare.net/derekweber/revealing-social-bot-communities-through-coordinated-behaviour).
 
-- Weber, D., Nasim, M., Falzon, L. and Mitchell, L. 2020. "#ArsonEmergency and Australia’s “Black Summer”: A study of polarisation and its broader effect on the online discussion", Talk presented at _The Fifth Annual Australian Social Network Analysis Conference 2020_, _ASNAC 2020_, Perth, Western Australia, 26-27 November. Available [here](https://www.slideshare.net/derekweber/arsonemergency-and-australias-black-summer-a-study-of-polarisation-and-its-broader-effect-on-the-online-discussion).
+- Weber, D., Nasim, M., Falzon, L. and Mitchell, L. (2020). "#ArsonEmergency and Australia’s “Black Summer”: A study of polarisation and its broader effect on the online discussion", Talk presented at _The Fifth Annual Australian Social Network Analysis Conference 2020_, _ASNAC 2020_, Perth, Western Australia, 26-27 November. Available [here](https://www.slideshare.net/derekweber/arsonemergency-and-australias-black-summer-a-study-of-polarisation-and-its-broader-effect-on-the-online-discussion).
+
+- Weber, D., Falzon, L., Mitchell, L. and Nasim, M. (Submitted). “Promoting and countering misinformation during Australia’s 2019–2020 bushfires: A case study of polarisation”. pp. 1–80. arXiv preprint, arXiv: [2201.03153](https://arxiv.org/abs/2201.03153) [cs.SI].
 
 
 ## Dependencies
